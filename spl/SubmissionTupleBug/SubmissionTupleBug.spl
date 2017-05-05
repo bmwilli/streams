@@ -1,0 +1,13 @@
+
+type propertyTuple = tuple<rstring fname, rstring lname>;
+type propertyTuples = list<propertyTuple>;
+
+composite SubmissionTupleBug {
+  param expression<propertyTuples> $propertyTuples : (propertyTuples) getSubmissionTimeValue("propertyTuples");
+  graph
+    () as Sink = Custom() {
+      logic onProcess : {
+        println("propertyTuples: " + (rstring)$propertyTuples);
+      }
+    }
+}
