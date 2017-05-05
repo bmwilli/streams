@@ -1,0 +1,17 @@
+use spl.file::*;
+
+composite Main {
+  param
+    expression<uint64> $size : (uint64)getSubmissionTimeValue("size","4096");
+  graph
+    () as Test = Custom() {
+      logic onProcess : {
+        mutable int32 err = 0;
+        mutable uint64 f = fopen("/dev/urandom","r",err);
+        mutable list<uint8> dataIn = [];
+        mutable uint64 bytesRead = fread(dataIn, f, $size, err);
+        println("bytesRead: " + (rstring)bytesRead + ", size: " + (rstring)size(dataIn));
+        fclose(f,err);
+      }
+    }
+}

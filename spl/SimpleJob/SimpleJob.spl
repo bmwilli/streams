@@ -1,0 +1,23 @@
+composite SimpleJob {
+  graph
+    stream <rstring msg, uint64 i> BeaconStream = Beacon() {
+      param period : 0.01;
+      output BeaconStream : msg = "Hello, World #" + (rstring)IterationCount(), i = IterationCount();
+    }
+
+    stream <BeaconStream> FilterStream = Filter(BeaconStream) {
+      param filter : (i % (uint64)2) == (uint64)0;
+      config placement : partitionColocation("process");
+    }
+
+    stream <BeaconStream> FunctorStream = Functor(FilterStream) {
+      config placement : partitionColocation("process");
+    }
+
+    stream <BeaconStream> SinkStream = Functor(FunctorStream) {
+      config placement : partitionColocation("process");
+    }
+
+    () as Sink = Custom(SinkStream as In) {
+    }
+}
