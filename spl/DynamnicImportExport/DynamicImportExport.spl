@@ -1,0 +1,126 @@
+
+type MessageType = tuple<rstring msg, int32 ctr>;
+type ExportProperty = tuple<rstring name, rstring value, rstring typ>;
+type ExportProperties = list<ExportProperty>;
+
+// Main Composite
+composite DynamicImportExport {
+  graph
+    stream<MessageType> DataStream = DataSource(){}
+    //() as SE = StaticExporter(DataStream) {}
+    
+    () as DE = DynamicExporter(DataStream) {}
+    
+    stream<MessageType> ImportStream = StaticImporter(){}
+    
+    stream<MessageType> ViewableStream = Filter(ImportStream) {}
+    () as Sink = Custom(ViewableStream){}
+}
+
+composite DynamicExport {
+  graph
+    stream<MessageType> DataStream = DataSource(){}
+    
+    () as DE = DynamicExporter(DataStream) {}   
+}
+
+composite DynamicImport {
+  graph
+    stream<MessageType> ImportStream = DynamicImporter(){}
+    
+    stream<MessageType> ViewableStream = Filter(ImportStream) {}
+    () as Sink = Custom(ViewableStream){}  
+}
+
+
+// ****************** Data Source *******************//
+composite DataSource ( output DataStream) {
+  graph
+    stream<MessageType> DataStream as Out = Custom() {
+      logic
+        state : mutable int32 c = 0;
+        onProcess : {
+          while (!isShutdown()) {
+            c++;
+            submit({msg="Hello, World #" + (rstring)c, ctr = c},Out);
+            block(1.0);
+          }
+        }
+    }
+}
+
+// ******************* EXPORTS ************************//
+
+// This composite sets parameters on the Export() operator
+composite StaticExporter (input ExportedStream) {
+  graph
+  
+  () as Exporter = Export(ExportedStream){
+    param properties : {kind = "message"};
+  }
+}
+
+
+// This composite uses the setOutputPortExportProperties() function 
+composite DynamicExporter (input ExportedStream) {
+  param
+    expression<ExportProperties> $exportProperties: [{name="kind", value="\"message\"", typ = "rstring"}];
+  graph
+  
+  stream<ExportedStream> ExportControl as Out = Custom(ExportedStream as In) {
+    logic
+      state: {
+        mutable int32 res = -99;
+      }
+      onTuple In : {
+        if (res == -99) {
+          res = setOutputPortExportProperties($exportProperties, 0u);
+          println("res = " + (rstring)res);
+        }
+        if (res != 0) {
+          println("setOutputPortExportProperties(" + (rstring)$exportProperties + ") failed with code: " + (rstring)res);
+          abort();
+        }
+      
+        submit(In,Out);
+      }
+  }
+  
+  () as Exporter = Export(ExportControl){}
+  
+}
+
+//********************** IMPORTS ***************************//
+
+
+composite StaticImporter (output ImportedStream) {
+  graph
+  
+  stream<MessageType> ImportedStream = Import() {
+    param subscription : kind == "message";
+  }
+}
+
+composite DynamicImporter (output ImportedStream) {
+  param
+    expression<rstring> $importSubscription: "kind==\"message\"";
+  graph
+  
+  stream<MessageType> ControlledImport = Import() {}
+  
+  stream<MessageType> ImportedStream as Out = Custom(ControlledImport as In) {
+    logic
+      state: {
+        mutable int32 res = setInputPortImportSubscription($importSubscription,0u);
+      }
+      onTuple In : {
+        if (res != 0) {
+          println("setInputPortImportSubscription(" + (rstring)$importSubscription + ") failed with code: " + (rstring)res);
+          abort();
+        }
+      
+        submit(In,Out);
+      }
+  }
+  config logLevel : debug;
+}

@@ -76,7 +76,7 @@ composite BlastIt (output Results) {
           _res_tuple.str = "[sink] Bandwidth : " + (rstring)((float64)(_count * (uint32)_size * (uint32)8) / diffAsSecs(_ts_end, _ts_begin) / (float64)(1024 * 1024)) + " Mb/s";
           submit(_res_tuple, Results);
         }
-      config placement: hostExlocation("separate" + (rstring)getChannel());
+      //config placement: hostExlocation("separate" + (rstring)getChannel());
     }
 
     () as Sink = Custom(Blast) {
@@ -87,7 +87,7 @@ composite BlastIt (output Results) {
         onTuple Blast: {
           _count++;
         }
-      config placement: hostExlocation("separate" + (rstring)getChannel());
+      //config placement: hostExlocation("separate" + (rstring)getChannel());
     }
 
 }
