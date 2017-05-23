@@ -1,0 +1,21 @@
+Inspecting Zookeeper for Streams Resource Manager Development:
+-------------------------------------------------------------
+
+Run the following command to get auths from Streams:
+
+/opt/ibm/InfoSphere_Streams/4.2.0.0/java/bin/java -cp /opt/ibm/InfoSphere_Streams/4.2.0.0/system/impl/lib/com.ibm.streams.platform.jar com.ibm.streams.management.persistence.Permission StreamsDomain
+
+
+Run zkCli.sh
+
+Paste the auth commands from above into command line
+
+
+Use two windows is easiest.
+In one window issue ls commands, then when you get to a node you want to see copy into other window where you have get commands
+
+Example path for Streams Mesos Resource Manager:
+
+/com.ibm.im.streams.resourcemgr/mesos/domains/StreamsDomain/state/resources
+
+Resource manager path is removed when resource manager is stopped
