@@ -1,0 +1,38 @@
+composite ParseBug {
+  graph
+    stream<rstring line> OneRecord = Custom() {
+      logic
+        onProcess : {
+          mutable rstring a="";
+          mutable rstring b="";
+          for (int32 i in range(2048)) {a = a + "A";}
+          for (int32 i in range(2048)) {b = b + "B";}
+          submit({line=a + "," + b},OneRecord);
+      }
+    }
+
+    //Repeate line very fast and convert to blob
+    stream<blob content> ManyRecords = Custom(OneRecord as In) {
+      logic
+        onTuple In: {
+          while (!isShutdown()) {
+            submit({content=convertToBlob(In.line+"\n")},ManyRecords);
+            submit(Sys.WindowMarker,ManyRecords);
+          }
+        }
+    }
+
+    stream<rstring greeting, rstring subject> ParsedData = Parse(ManyRecords) {
+      param
+        format: csv;
+        separator: ",";
+    }
+
+    () as Sink = Custom(ParsedData as In) {
+      logic
+        state : mutable int32 x=0;
+        onTuple In: println("x=" + (rstring)x++);
+    }
+  //config tracing: debug;
+}
+
