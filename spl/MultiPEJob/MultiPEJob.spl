@@ -1,0 +1,29 @@
+composite MultiPEJob {
+  graph
+    stream <rstring msg, uint64 i> BeaconStream = Beacon() {
+      param period : 0.01;
+      output BeaconStream : msg = "Hello, World #" + (rstring)IterationCount(), i = IterationCount();
+    }
+
+    stream <BeaconStream> FilterStream = Filter(BeaconStream) {
+      param filter : (i % (uint64)2) == (uint64)0;
+      config placement : partitionIsolation;
+    }
+
+    stream <BeaconStream> ThreadedPortStream = Custom(FilterStream) {
+      logic
+        state : mutable float64 t;
+        onTuple FilterStream: {
+		t = random();
+		block(t);
+		submit(FilterStream,ThreadedPortStream);
+	}
+      config threadedPort : queue(FilterStream, Sys.DropFirst, 100);
+    }
+
+    stream <BeaconStream> SinkStream = Functor(ThreadedPortStream) {
+    }
+
+    () as Sink = Custom(SinkStream as In) {
+    }
+}

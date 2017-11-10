@@ -1,0 +1,35 @@
+composite SimpleCustomMetricJob {
+  graph
+    stream <rstring msg, uint64 i> BeaconStream = Beacon() {
+      param period : 0.01;
+      output BeaconStream : msg = "Hello, World #" + (rstring)IterationCount(), i = IterationCount();
+    }
+
+    stream <BeaconStream> CustomStream = Custom(BeaconStream as In) {
+      logic
+        state : {
+          boolean initialized = initMetrics();
+          mutable int64 numOdd = 0l;
+          mutable int64 numEven = 0l;
+        }
+        onTuple In : {
+          if ((In.i % 2ul) == 0ul) { setCustomMetricValue("evenMessageCount",++numEven);}
+          else {setCustomMetricValue("oddMessageCount",++numOdd);}
+          submit(In,CustomStream); 
+        }
+    }
+
+    stream <BeaconStream> FunctorStream = Functor(CustomStream) {
+    }
+
+    stream <BeaconStream> SinkStream = Functor(FunctorStream) {
+    }
+
+    () as Sink = Custom(SinkStream as In) {
+    }
+}
+    stateful boolean initMetrics() {
+      createCustomMetric("oddMessageCount", "Number of odd messages", Sys.Counter, 0l);
+      createCustomMetric("evenMessageCount", "Number of even messages", Sys.Counter, 0l);
+      return true;
+    }

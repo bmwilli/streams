@@ -1,0 +1,29 @@
+
+type
+  MainTupleType = tuple<rstring msg, uint64 i>;
+
+composite CompositeJob {
+
+  graph
+    stream <rstring msg, uint64 i> BeaconStream = Beacon() {
+      param period : 0.01;
+      output BeaconStream : msg = "Hello, World #" + (rstring)IterationCount(), i = IterationCount();
+    }
+
+    stream <BeaconStream> FilterStream = Filter(BeaconStream) {
+      param filter : (i % (uint64)4) == (uint64)0;
+    }
+
+    stream <BeaconStream> SubCompositeToMain = SubComposite(FilterStream) {
+    }
+
+    () as Sink = Custom(SubCompositeToMain as In) {
+    }
+}
+
+composite SubComposite ( output SubCompOut; input SubCompIn) {
+  graph
+    stream <MainTupleType> SubCompFunctor = Functor(SubCompIn) {}
+
+    stream <MainTupleType> SubCompOut = Functor(SubCompFunctor) {}
+}
