@@ -1,9 +1,9 @@
-.PHONY: all standalone distributed clean 
+.PHONY: all standalone distributed clean submit
 
 SPLC_FLAGS ?= --data-directory  -a
 SPLC = $(STREAMS_INSTALL)/bin/sc
 SPL_CMD_ARGS ?= 
-SPL_MAIN_COMPOSITE = CongestedJob 
+SPL_MAIN_COMPOSITE = CongestedJob
 
 all: distributed
 
@@ -16,3 +16,5 @@ distributed:
 clean: 
 	$(SPLC) $(SPLC_FLAGS) -C -M $(SPL_MAIN_COMPOSITE)
 
+submit:
+	streamtool submitjob --jobname ${SPL_MAIN_COMPOSITE} output/${SPL_MAIN_COMPOSITE}.sab
