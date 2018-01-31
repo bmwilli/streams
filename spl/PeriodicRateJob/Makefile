@@ -3,7 +3,7 @@
 SPLC_FLAGS ?= --data-directory  -a
 SPLC = $(STREAMS_INSTALL)/bin/sc
 SPL_CMD_ARGS ?= 
-SPL_MAIN_COMPOSITE = CongestedJob
+SPL_MAIN_COMPOSITE = PeriodicRateJob
 
 all: distributed
 

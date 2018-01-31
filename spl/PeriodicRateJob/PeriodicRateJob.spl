@@ -1,0 +1,62 @@
+composite PeriodicRateJob {
+  param
+    //expression<int32> $periodInSeconds : (int32)getSubmissionTimeValue("periodInSeconds","60"); // one minute
+    expression<int32> $periodInSeconds : (int32)getSubmissionTimeValue("periodInSeconds","300"); // 5 minutes
+
+    expression<int32> $minRatePerSecond : (int32) getSubmissionTimeValue("minRatePerSecond","1000");
+    expression<int32> $maxRatePerSecond : (int32) getSubmissionTimeValue("maxRatePerSecond","5000");
+
+  type jobSchema = 
+    uint64 iteration;
+  
+  graph
+    stream <jobSchema> DataFlow = Custom() {
+      logic
+        onProcess : {
+          println("*** BEGIN ***");
+          mutable int32 direction = 1; // 1 = increment, -1 = decrement
+          mutable uint64 counter = 0;
+          mutable int32 rateDelta = $maxRatePerSecond - $minRatePerSecond;
+          mutable int32 secondsPerSlot = ($periodInSeconds / rateDelta);
+          if (secondsPerSlot == 0) {
+            secondsPerSlot = 1;
+          }
+
+          mutable int32 rateIncrement = (rateDelta / ($periodInSeconds / 2));
+          mutable int32 currentRate = $minRatePerSecond;
+          mutable int32 currentSlot = 1;
+          mutable int32 currentSecond = 1;
+          mutable float64 currentSleep = (1.0 / (float64)currentRate);
+          mutable int32 nextRate = 0;
+          while(!isShutdown()) {
+            println("periodInSeconds = " + (rstring)$periodInSeconds);
+            println("rateDelta = " + (rstring)rateDelta);
+            println("secondsPerSlot = " + (rstring)secondsPerSlot);
+            println("currentSlot = " + (rstring)currentSlot);
+            println("currentRate = " + (rstring)currentRate);
+            println("currentSleep = " + (rstring)currentSleep);
+            for (int32 i in range(1,currentRate)) { // A seconds worth of data
+              submit({iteration=counter++},DataFlow);
+              block(currentSleep);
+            }
+            if (++currentSecond > secondsPerSlot) { // Next Slot (increment or decrement rate)
+              nextRate = currentRate + (rateIncrement * direction);
+              if ((nextRate >= $maxRatePerSecond) || (nextRate <= $minRatePerSecond)) {
+                // change direction
+                direction = direction * -1;
+              }
+              currentSecond = 1;
+              currentSlot++;
+              currentRate = currentRate + (rateIncrement * direction);
+              currentSleep = (1.0 / (float64)currentRate);
+              // NEed to figure out when to decrement
+            }
+            println("***********");
+          }
+
+        }
+    }
+
+    () as Sink = Custom(DataFlow as In) {
+    }
+}
