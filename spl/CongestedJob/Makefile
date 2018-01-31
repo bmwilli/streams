@@ -1,4 +1,4 @@
-.PHONY: all standalone distributed clean 
+.PHONY: all standalone distributed clean submit
 
 SPLC_FLAGS ?= --data-directory  -a
 SPLC = $(STREAMS_INSTALL)/bin/sc
