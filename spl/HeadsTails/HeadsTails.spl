@@ -1,0 +1,45 @@
+composite HeadsTails {
+  graph
+    stream <uint64 flip, rstring result > FlipStream = Beacon() {
+      param period : 0.01;
+      output FlipStream : flip = IterationCount(),
+        result = ((random() < 0.5)?"Heads":"Tails");
+    }
+
+    stream <FlipStream> FlipStats = Custom(FlipStream) {
+      logic
+        state : {
+          boolean init = InitCustomMetrics();
+          mutable rstring lastFlip = "";
+          mutable int64 sameCount, maxHeads, maxTails = 0;
+        onTuple FlipStream : {
+          if (result == lastFlip) {
+            sameCount++;
+            if ((result == "Heads") && (sameCount > maxHeads)
+              setCustomMetricValue("maxConsecutiveHeads",sameCount);
+            else if ((result == "Tails") && (sameCount > maxTails)
+              setCustomMetricValue("maxConsecutiveHeads",sameCount);
+          } else {
+            sameCount = 0l;
+          }
+    }
+
+    (stream <FlipStream> HeadsTuples;
+     stream <FlipStream> TailsTuples) = Filter(FlipStream) {
+      param filter : result == Heads;;
+    }
+
+    () as HeadsSink = Custom(HeadsTuples) {
+      logic onTuple HeadsTuples : println("Heads!! I Win!!");
+    }
+
+    () as TailsSink = Custom(TailsTuples) {
+      logic onTuple TailsTuples : println("Tails!! You Lose!!");
+    }
+}
+
+boolean InitCustomMetrics() {
+  CreateCustomMetric("maxConsecutiveHeads","Max Consecutive Heads", Sys.Counter, 0);
+  CreateCustomMetric("maxConsecutiveTails","Max Consecutive Tails", Sys.Counter, 0);
+  return true;
+} 
