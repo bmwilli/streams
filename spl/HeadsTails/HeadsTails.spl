@@ -12,21 +12,23 @@ composite HeadsTails {
           boolean init = InitCustomMetrics();
           mutable rstring lastFlip = "";
           mutable int64 sameCount, maxHeads, maxTails = 0;
+        }
         onTuple FlipStream : {
           if (result == lastFlip) {
             sameCount++;
-            if ((result == "Heads") && (sameCount > maxHeads)
+            if ((result == "Heads") && (sameCount > maxHeads))
               setCustomMetricValue("maxConsecutiveHeads",sameCount);
-            else if ((result == "Tails") && (sameCount > maxTails)
+            else if ((result == "Tails") && (sameCount > maxTails))
               setCustomMetricValue("maxConsecutiveHeads",sameCount);
           } else {
             sameCount = 0l;
           }
+        }
     }
 
     (stream <FlipStream> HeadsTuples;
      stream <FlipStream> TailsTuples) = Filter(FlipStream) {
-      param filter : result == Heads;;
+      param filter : result == "Heads";
     }
 
     () as HeadsSink = Custom(HeadsTuples) {
@@ -38,8 +40,8 @@ composite HeadsTails {
     }
 }
 
-boolean InitCustomMetrics() {
-  CreateCustomMetric("maxConsecutiveHeads","Max Consecutive Heads", Sys.Counter, 0);
-  CreateCustomMetric("maxConsecutiveTails","Max Consecutive Tails", Sys.Counter, 0);
+stateful boolean InitCustomMetrics() {
+  createCustomMetric("maxConsecutiveHeads","Max Consecutive Heads", Sys.Counter, 0l);
+  createCustomMetric("maxConsecutiveTails","Max Consecutive Tails", Sys.Counter, 0l);
   return true;
 } 
