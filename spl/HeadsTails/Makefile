@@ -17,7 +17,7 @@ clean:
 	$(SPLC) $(SPLC_FLAGS) -C -M $(SPL_MAIN_COMPOSITE)
 
 submit:
-	streamtool submitjob --jobname $(SPL_MAIN_COMPOSITE) output/$(SPL_MAIN_COMPOSITE.sab
+	streamtool submitjob --jobname $(SPL_MAIN_COMPOSITE) output/$(SPL_MAIN_COMPOSITE).sab
 
 cancel:
 	streamtool canceljob --jobnames $(SPL_MAIN_COMPOSITE)

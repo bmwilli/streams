@@ -11,18 +11,24 @@ composite HeadsTails {
         state : {
           boolean init = InitCustomMetrics();
           mutable rstring lastFlip = "";
-          mutable int64 sameCount, maxHeads, maxTails = 0;
+          mutable int64 sameCount = 0, maxHeads = 0, maxTails = 0;
         }
         onTuple FlipStream : {
           if (result == lastFlip) {
             sameCount++;
-            if ((result == "Heads") && (sameCount > maxHeads))
-              setCustomMetricValue("maxConsecutiveHeads",sameCount);
-            else if ((result == "Tails") && (sameCount > maxTails))
-              setCustomMetricValue("maxConsecutiveHeads",sameCount);
+            if ((result == "Heads") && (sameCount > maxHeads)) {
+              println("Should set maxHeads = sameCount: " + (rstring)sameCount);
+              maxHeads = sameCount;
+              setCustomMetricValue("maxConsecutiveHeads",maxHeads);
+            } else if ((result == "Tails") && (sameCount > maxTails)) {
+              println("Should set maxTails = sameCount: " + (rstring)sameCount);
+              maxTails = sameCount;
+              setCustomMetricValue("maxConsecutiveTails",maxTails);
+            }
           } else {
             sameCount = 0l;
           }
+          lastFlip = result;
         }
     }
 
