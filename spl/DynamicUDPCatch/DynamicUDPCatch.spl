@@ -1,0 +1,53 @@
+
+
+composite DynamicUDPCatch {
+  graph
+    @parallel(width=4)
+    stream<rstring message> features = dataProducer() {
+      config
+        placement: host("ip-172-31-29-41"),
+                   partitionColocation("producer" + (rstring)getChannel());
+    }
+    
+    @parallel(width=3)
+    () as Sink = Custom(features as In) {
+      logic onTuple In : {
+        println("Custom Channel #" + (rstring)getChannel() + ", " + message);
+      }
+      config
+        placement: host("ip-172-31-29-41"),
+                   partitionColocation("printer" + (rstring)getChannel());
+    }
+}
+
+composite dataProducer(output dataOut) {
+  graph
+    stream<rstring message> newData = Beacon() {
+      param period : 0.5;
+      output newData : message = "ch" + (rstring)getChannel();
+    }
+    
+    stream<rstring lookupMessage, rstring appender> newTable = Custom() {
+      logic onProcess : {
+        submit({lookupMessage="ch0",appender="channel 0"},newTable);
+        submit({lookupMessage="ch1",appender="channel 1"},newTable);
+        submit({lookupMessage="ch2",appender="channel 2"},newTable);
+        submit({lookupMessage="ch3",appender="channel 3"},newTable);
+        submit(Sys.WindowMarker,newTable);
+      }
+    }
+    
+    //@catch(exception=streams, tupleTrace=true, stackTrace=false)
+    stream<rstring message> EnrichedStream = Join(newData as Query; newTable as RHS) {
+      window
+        Query : sliding, count(0);
+        RHS : sliding, count(100);
+      param
+        equalityLHS : Query.message;
+        equalityRHS : RHS.lookupMessage;
+      output
+        EnrichedStream : message = message + ", " + RHS.appender;
+    }
+    
+    stream<rstring message> dataOut = Functor(EnrichedStream) {}
+}
