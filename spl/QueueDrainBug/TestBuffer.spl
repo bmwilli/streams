@@ -1,0 +1,17 @@
+composite TestBuffer {
+  graph
+    stream<rstring[10000] nothing> Import1 = Import() {
+      param
+        subscription: kind=="Ingest" && project == "Test";
+    }
+
+    stream<Import1> ProcessQueue = Functor(Import1) {
+      config
+        threadedPort : queue(Import1, Sys.Wait, 30000);
+    }
+
+    stream<Import1> LotsOfTime = Throttle(ProcessQueue) {
+      param
+        rate : 100.0;
+    }
+}

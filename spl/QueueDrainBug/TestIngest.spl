@@ -1,0 +1,21 @@
+composite TestIngest {
+  graph
+    stream<rstring[10000] nothing> Beacon1 = Beacon() {
+      param
+        period : 0.001;
+      output
+        Beacon1: nothing = (rstring[10000])("Nothing of value #" + (rstring)IterationCount());
+    }
+
+    stream<Beacon1> IngestQueue = Custom(Beacon1) {
+      logic
+        onTuple Beacon1 : submit(Beacon1,IngestQueue);
+      config
+        threadedPort : queue(Beacon1, Sys.Wait, 10000);
+    }
+
+    () as ExportIngest = Export(IngestQueue) {
+      param
+        properties : { kind="Ingest", project="Test" };
+    }
+}
