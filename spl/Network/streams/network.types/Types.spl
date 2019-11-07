@@ -1,0 +1,190 @@
+/*
+** Copyright (C) 2015  International Business Machines Corporation
+** All Rights Reserved
+*/
+
+namespace network.types;
+
+type PacketType =
+    float64 captureTime,            // time that packet was captured, in seconds since Unix epoch
+    uint32 ipfixSource,           // IP source address of IPFIX message
+    blob ipfixMessage;            // the IPFIX message from a packet, excluding all network headers
+
+type IPFIXMessageType =
+    rstring captureTime,                   // time that packet was captured, in seconds since Unix epoch
+    uint64  messageNumber,                 // sequence number of message
+    rstring ipProtocol,                    // standard field 4, IP protocol byte
+    rstring ipSourceAddress,               // standard field 8 or 27, IP source address
+    uint16  ipSourcePort,                  // standard field 7, IP source port
+    rstring ipDestinationAddress,          // standard field 12 or 28, IP destination address
+    uint16  ipDestinationPort,             // standard field 11, IP destination port
+    uint64 octetDeltaCount, // standard field 1
+    uint64 packetDeltaCount, // standard field 2
+    uint8 protocolIdentifier, // standard field 4
+    uint8 ipClassOfService, // standard field 5
+    uint16 tcpControlBits, // standard field 6
+    uint16 sourceTransportPort, // standard field 7
+    rstring sourceIPv4Address, // standard field 8
+    uint8 sourceIPv4PrefixLength, // standard field 9
+    uint32 ingressInterface, // standard field 10
+    uint16 destinationTransportPort, // standard field 11
+    rstring destinationIPv4Address, // standard field 12
+    uint8 destinationIPv4PrefixLength, // standard field 13
+    uint32 egressInterface, // standard field 14
+    rstring ipNextHopIPv4Address, // standard field 15
+    uint32 bgpSourceAsNumber, // standard field 16
+    uint32 bgpDestinationAsNumber, // standard field 17
+    rstring bgpNextHopIPv4Address, // standard field 18
+    uint64 postMCastPacketDeltaCount, // standard field 19
+    uint64 postMCastOctetDeltaCount, // standard field 20
+    rstring flowEndSysUpTime, // standard field 21
+    rstring flowStartSysUpTime, // standard field 22
+    uint64 postOctetDeltaCount, // standard field 23
+    uint64 postPacketDeltaCount, // standard field 24
+    uint64 minimumIpTotalLength, // standard field 25
+    uint64 maximumIpTotalLength, // standard field 26
+    rstring sourceIPv6Address, // standard field 27
+    rstring destinationIPv6Address, // standard field 28
+    uint8 sourceIPv6PrefixLength, // standard field 29
+    uint8 destinationIPv6PrefixLength, // standard field 30
+    uint32 flowLabelIPv6, // standard field 31
+    uint16 icmpTypeCodeIPv4, // standard field 32
+    uint8 igmpType, // standard field 33
+    uint16 flowActiveTimeout, // standard field 36
+    uint16 flowIdleTimeout, // standard field 37
+    uint64 exportedOctetTotalCount, // standard field 40
+    uint64 exportedMessageTotalCount, // standard field 41
+    uint64 exportedFlowRecordTotalCount, // standard field 42
+    rstring sourceIPv4Prefix, // standard field 44
+    rstring destinationIPv4Prefix, // standard field 45
+    uint8 mplsTopLabelType, // standard field 46
+    rstring mplsTopLabelIPv4Address, // standard field 47
+    uint8 minimumTTL, // standard field 52
+    uint8 maximumTTL, // standard field 53
+    uint32 fragmentIdentification, // standard field 54
+    uint8 postIpClassOfService, // standard field 55
+    rstring sourceMacAddress, // standard field 56
+    rstring postDestinationMacAddress, // standard field 57
+    uint16 vlanId, // standard field 58
+    uint16 postVlanId, // standard field 59
+    uint8 ipVersion, // standard field 60
+    uint8 flowDirection, // standard field 61
+    rstring ipNextHopIPv6Address, // standard field 62
+    rstring bgpNextHopIPv6Address, // standard field 63
+    uint32 ipv6ExtensionHeaders, // standard field 64
+    list<uint8>[3] mplsTopLabelStackSection, // standard field 70
+    list<uint8>[3] mplsLabelStackSection2, // standard field 71
+    list<uint8>[3] mplsLabelStackSection3, // standard field 72
+    list<uint8>[3] mplsLabelStackSection4, // standard field 73
+    list<uint8>[3] mplsLabelStackSection5, // standard field 74
+    list<uint8>[3] mplsLabelStackSection6, // standard field 75
+    list<uint8>[3] mplsLabelStackSection7, // standard field 76
+    list<uint8>[3] mplsLabelStackSection8, // standard field 77
+    list<uint8>[3] mplsLabelStackSection9, // standard field 78
+    list<uint8>[3] mplsLabelStackSection10, // standard field 79
+    rstring destinationMacAddress, // standard field 80
+    rstring postSourceMacAddress, // standard field 81
+    uint64 octetTotalCount, // standard field 85
+    uint64 packetTotalCount, // standard field 86
+    uint16 fragmentOffset, // standard field 88
+    list<uint8> mplsVpnRouteDistinguisher, // standard field 90
+    uint32 bgpNextAdjacentAsNumber, // standard field 128
+    uint32 bgpPrevAdjacentAsNumber, // standard field 129
+    rstring exporterIPv4Address, // standard field 130
+    rstring exporterIPv6Address, // standard field 131
+    uint64 droppedOctetDeltaCount, // standard field 132
+    uint64 droppedPacketDeltaCount, // standard field 133
+    uint64 droppedOctetTotalCount, // standard field 134
+    uint64 droppedPacketTotalCount, // standard field 135
+    uint8 flowEndReason, // standard field 136
+    uint64 commonPropertiesId, // standard field 137
+    uint32 observationPointId, // standard field 138
+    uint16 icmpTypeCodeIPv6, // standard field 139
+    rstring mplsTopLabelIPv6Address, // standard field 140
+    uint32 lineCardId, // standard field 141
+    uint32 portId, // standard field 142
+    uint32 meteringProcessId, // standard field 143
+    uint32 exportingProcessId, // standard field 144
+    uint16 templateId, // standard field 145
+    uint8 wlanChannelId, // standard field 146
+    rstring wlanSSID, // standard field 147
+    uint64 flowId, // standard field 148
+    uint32 observationDomainId, // standard field 149
+    rstring flowStartSeconds, // standard field 150
+    rstring flowEndSeconds, // standard field 151
+    rstring flowStartMilliseconds, // standard field 152
+    rstring flowEndMilliseconds, // standard field 153
+    rstring flowStartMicroseconds, // standard field 154
+    rstring flowEndMicroseconds, // standard field 155
+    rstring flowStartNanoseconds, // standard field 156
+    rstring flowEndNanoseconds, // standard field 157
+    uint32 flowStartDeltaMicroseconds, // standard field 158
+    uint32 flowEndDeltaMicroseconds, // standard field 159
+    rstring systemInitTimeMilliseconds, // standard field 160
+    rstring flowDurationMilliseconds, // standard field 161
+    rstring flowDurationMicroseconds, // standard field 162
+    uint64 observedFlowTotalCount, // standard field 163
+    uint64 ignoredPacketTotalCount, // standard field 164
+    uint64 ignoredOctetTotalCount, // standard field 165
+    uint64 notSentFlowTotalCount, // standard field 166
+    uint64 notSentPacketTotalCount, // standard field 167
+    uint64 notSentOctetTotalCount, // standard field 168
+    rstring destinationIPv6Prefix, // standard field 169
+    rstring sourceIPv6Prefix, // standard field 170
+    uint64 postOctetTotalCount, // standard field 171
+    uint64 postPacketTotalCount, // standard field 172
+    uint64 flowKeyIndicator, // standard field 173
+    uint64 postMCastPacketTotalCount, // standard field 174
+    uint64 postMCastOctetTotalCount, // standard field 175
+    uint8 icmpTypeIPv4, // standard field 176
+    uint8 icmpCodeIPv4, // standard field 177
+    uint8 icmpTypeIPv6, // standard field 178
+    uint8 icmpCodeIPv6, // standard field 179
+    uint16 udpSourcePort, // standard field 180
+    uint16 udpDestinationPort, // standard field 181
+    uint16 tcpSourcePort, // standard field 182
+    uint16 tcpDestinationPort, // standard field 183
+    uint32 tcpSequenceNumber, // standard field 184
+    uint32 tcpAcknowledgementNumber, // standard field 185
+    uint16 tcpWindowSize, // standard field 186
+    uint16 tcpUrgentPointer, // standard field 187
+    uint8 tcpHeaderLength, // standard field 188
+    uint8 ipHeaderLength, // standard field 189
+    uint16 totalLengthIPv4, // standard field 190
+    uint16 payloadLengthIPv6, // standard field 191
+    uint8 ipTTL, // standard field 192
+    uint8 nextHeaderIPv6, // standard field 193
+    uint32 mplsPayloadLength, // standard field 194
+    uint8 ipDiffServCodePoint, // standard field 195
+    uint8 ipPrecedence, // standard field 196
+    uint8 fragmentFlags, // standard field 197
+    uint64 octetDeltaSumOfSquares, // standard field 198
+    uint64 octetTotalSumOfSquares, // standard field 199
+    uint8 mplsTopLabelTTL, // standard field 200
+    uint32 mplsLabelStackLength, // standard field 201
+    uint32 mplsLabelStackDepth, // standard field 202
+    uint8 mplsTopLabelExp, // standard field 203
+    uint32 ipPayloadLength, // standard field 204
+    uint16 udpMessageLength, // standard field 205
+    uint8 isMulticast, // standard field 206
+    uint8 ipv4IHL, // standard field 207
+    uint32 ipv4Options, // standard field 208
+    uint64 tcpOptions, // standard field 209
+    list<uint8> paddingOctets, // standard field 210
+    rstring collectorIPv4Address, // standard field 211
+    rstring collectorIPv6Address, // standard field 212
+    uint32 exportInterface, // standard field 213
+    uint8 exportProtocolVersion, // standard field 214
+    uint8 exportTransportProtocol, // standard field 215
+    uint16 collectorTransportPort, // standard field 216
+    uint16 exporterTransportPort, // standard field 217
+    uint64 tcpSynTotalCount, // standard field 218
+    uint64 tcpFinTotalCount, // standard field 219
+    uint64 tcpRstTotalCount, // standard field 220
+    uint64 tcpPshTotalCount, // standard field 221
+    uint64 tcpAckTotalCount, // standard field 222
+    uint64 tcpUrgTotalCount, // standard field 223
+    uint64 ipTotalLength, // standard field 224
+    uint8 postMplsTopLabelExp, // standard field 237
+    uint16 tcpWindowScale; // standard field 238
+
