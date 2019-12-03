@@ -70,7 +70,8 @@ composite IpfixIngest {
             jdbcDriverLib : $jdbcDriverLib;
             jdbcClassName : $jdbcClassName;
             //jdbcUrl : $jdbcUrlPrefix + $dbhost + ":" + $dbport + "/" + $dbname + ";user=admin;password=yyy;loglevel=2;logdirpath=";
-            jdbcUrl : $jdbcUrlPrefix + $dbhost + ":" + $dbport + "/" + $dbname + ";loglevel=2;logdirpath=";
+            //jdbcUrl : $jdbcUrlPrefix + $dbhost + ":" + $dbport + "/" + $dbname + ";loglevel=2;logdirpath=";
+            jdbcUrl : $jdbcUrlPrefix + $dbhost + ":" + $dbport + "/" + $dbname + ";autocommit=true";
 
             jdbcUser : $dbuser;
             jdbcPassword : $dbpassword;
@@ -79,7 +80,7 @@ composite IpfixIngest {
             isolationLevel : "JDBC_TRANSACTION_READ_UNCOMMITTED";
             commitPolicy : OnTransactionAndCheckpoint;
             batchSize : $dbbatchsize;
-            transactionSize: 1;
+            //transactionSize: 1;
             //commitInterval: 2;
 
 
