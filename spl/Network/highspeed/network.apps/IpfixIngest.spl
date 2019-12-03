@@ -1,0 +1,279 @@
+/*
+** Copyright (C) 2015  International Business Machines Corporation
+** All Rights Reserved
+*/
+
+namespace network.apps;
+
+use com.ibm.streamsx.network.ipv4::*;
+use com.ibm.streamsx.network.ipv6::*;
+use com.ibm.streamsx.network.mac::*;
+use com.ibm.streamsx.network.source::*;
+use com.ibm.streamsx.network.parse::*;
+use com.ibm.streamsx.network.datetimeformat::*;
+use network.types::PacketType;
+use network.types::IPFIXMessageType;
+use network.types::ProfilePacketType;
+use network.types::IPFIXParseErrorType;
+
+composite IpfixIngest {
+
+    param
+        //expression<rstring> $pcapFilename: getSubmissionTimeValue("pcapFilename", "/home/streamsadmin/SPL/com.ibm.streamsx.network/SampleNetworkToolkitData/data/sample_ipfix_juniper.pcap" );
+        expression<rstring> $pcapDirectory: getSubmissionTimeValue("pcapDirectory","/ibm/NETWORK_DATA/ingest");
+        //expression<rstring> $workingDirectory: getSubmissionTimeValue("workingDirectory","/ibm/NETWORK_DATA/working");
+        expression<int32> $sourceWidth : (int32)getSubmissionTimeValue("sourceWidth","2");
+
+
+    graph
+
+    stream<rstring filename> PacketFilenames = DirectoryScan() {
+        param
+            directory: $pcapDirectory;
+            ignoreDotFiles: true;
+            sleepTime: 0.0;
+            pattern: ".pcap$";
+    }
+
+
+    () as FileNameSink = Custom(PacketFilenames) {
+        logic onTuple PacketFilenames : println("Processing file: " + filename);
+    }
+
+    @parallel(width = $sourceWidth)
+    () as FileProcessor = ReadAndParse(PacketFilenames){
+        //config placement : partitionColocation("Processor");
+    }
+
+}
+
+composite ReadAndParse(input PacketFilenames) {
+  param
+    expression<map<uint8,rstring>> $ipProtocols : { 1ub: "icmp", 6ub: "tcp", 17ub: "udp" };
+
+  graph
+
+    (stream<PacketType> IPFIXPacketStream;
+     stream<ProfilePacketType> ProfilePacketStream) = PacketFileSource(PacketFilenames) {
+        param
+            //pcapFilename: $pcapFilename;
+            //inputFilter: "udp port 4739";
+            outputFilters: UDP_PORT(4739uh),  // What should be IPFIX out port 0
+                            true;             // All packets out port 1
+            metricsInterval: 0.0;
+        output 
+            IPFIXPacketStream:
+                captureTime = (float64)CAPTURE_SECONDS() + (float64)CAPTURE_MICROSECONDS() / 1000000.0,
+                ipfixSource = IPV4_SRC_ADDRESS(),
+                ipfixMessage = PAYLOAD_DATA();
+            ProfilePacketStream:
+                captureTime = (float64)CAPTURE_SECONDS() + (float64)CAPTURE_MICROSECONDS() / 1000000.0,
+                ipProtocol = IP_PROTOCOL() in $ipProtocols ? $ipProtocols[IP_PROTOCOL()] : (rstring)IP_PROTOCOL(),
+                ipSourceAddress = IPV4_SRC_ADDRESS()>0u ? convertIPV4AddressNumericToString(IPV4_SRC_ADDRESS()) : size(IPV6_SRC_ADDRESS())>0 ? convertIPV6AddressNumericToString(IPV6_SRC_ADDRESS())  : "",
+                ipSourcePort = IP_SRC_PORT(),
+                ipDestinationAddress = IPV4_DST_ADDRESS()>0u ? convertIPV4AddressNumericToString(IPV4_DST_ADDRESS()) : size(IPV6_DST_ADDRESS())>0 ? convertIPV6AddressNumericToString(IPV6_DST_ADDRESS())  : "",
+                ipDestinationPort = IP_DST_PORT();
+        config
+            threadedPort: queue(PacketFilenames,Sys.Wait,100);
+    }
+
+    (stream<IPFIXMessageType> IPFIXMessageStream;
+     stream<IPFIXParseErrorType> IPFIXParseErrorStream) = IPFIXMessageParser(IPFIXPacketStream) {
+      logic state: { map<uint8,rstring> ipProtocols = { 1: "icmp", 6: "tcp", 17: "udp" }; }
+      param
+          messageAttribute: ipfixMessage;
+          sourceAttribute: ipfixSource;
+          outputFilters: !parseError(),
+                          parseError();
+      output 
+        IPFIXMessageStream:
+          captureTime = formatEpochDateTime(captureTime),
+          messageNumber = messagesProcessed(),
+          ipProtocol = IPFIX_protocolIdentifier() in ipProtocols ? ipProtocols[IPFIX_protocolIdentifier()] : (rstring)IPFIX_protocolIdentifier(),
+          ipSourceAddress = IPFIX_sourceIPv4Address()>0u ? convertIPV4AddressNumericToString(IPFIX_sourceIPv4Address()) : size(IPFIX_sourceIPv6Address())>0 ? convertIPV6AddressNumericToString(IPFIX_sourceIPv6Address())  : "",
+          ipSourcePort = IPFIX_sourceTransportPort(),
+          ipDestinationAddress = IPFIX_destinationIPv4Address()>0u ? convertIPV4AddressNumericToString(IPFIX_destinationIPv4Address()) : size(IPFIX_destinationIPv6Address())>0 ? convertIPV6AddressNumericToString(IPFIX_destinationIPv6Address())  : "",
+          ipDestinationPort = IPFIX_destinationTransportPort(),
+          octetDeltaCount = IPFIX_octetDeltaCount(), // standard field 1
+          packetDeltaCount = IPFIX_packetDeltaCount(), // standard field 2
+          protocolIdentifier = IPFIX_protocolIdentifier(), // standard field 4
+          ipClassOfService = IPFIX_ipClassOfService(), // standard field 5
+          tcpControlBits = IPFIX_tcpControlBits(), // standard field 6
+          sourceTransportPort = IPFIX_sourceTransportPort(), // standard field 7
+          sourceIPv4Address = IPFIX_sourceIPv4Address()>0u ? convertIPV4AddressNumericToString(IPFIX_sourceIPv4Address()) : "", // standard field 8
+          sourceIPv4PrefixLength = IPFIX_sourceIPv4PrefixLength(), // standard field 9
+          ingressInterface = IPFIX_ingressInterface(), // standard field 10
+          destinationTransportPort = IPFIX_destinationTransportPort(), // standard field 11
+          destinationIPv4Address = IPFIX_destinationIPv4Address()>0u ? convertIPV4AddressNumericToString(IPFIX_destinationIPv4Address()) : "", // standard field 12
+          destinationIPv4PrefixLength = IPFIX_destinationIPv4PrefixLength(), // standard field 13
+          egressInterface = IPFIX_egressInterface(), // standard field 14
+          ipNextHopIPv4Address = IPFIX_ipNextHopIPv4Address()>0u ? convertIPV4AddressNumericToString(IPFIX_ipNextHopIPv4Address()) : "", // standard field 15
+          bgpSourceAsNumber = IPFIX_bgpSourceAsNumber(), // standard field 16
+          bgpDestinationAsNumber = IPFIX_bgpDestinationAsNumber(), // standard field 17
+          bgpNextHopIPv4Address = IPFIX_bgpNextHopIPv4Address()>0u ? convertIPV4AddressNumericToString(IPFIX_bgpNextHopIPv4Address()) : "", // standard field 18
+          postMCastPacketDeltaCount = IPFIX_postMCastPacketDeltaCount(), // standard field 19
+          postMCastOctetDeltaCount = IPFIX_postMCastOctetDeltaCount(), // standard field 20
+          flowEndSysUpTime = IPFIX_flowEndSysUpTime()>0u ? formatElapsedTime(IPFIX_flowEndSysUpTime()) : "", // standard field 21
+          flowStartSysUpTime = IPFIX_flowStartSysUpTime()>0u ? formatElapsedTime(IPFIX_flowStartSysUpTime()) : "", // standard field 22
+          postOctetDeltaCount = IPFIX_postOctetDeltaCount(), // standard field 23
+          postPacketDeltaCount = IPFIX_postPacketDeltaCount(), // standard field 24
+          minimumIpTotalLength = IPFIX_minimumIpTotalLength(), // standard field 25
+          maximumIpTotalLength = IPFIX_maximumIpTotalLength(), // standard field 26
+          sourceIPv6Address = size(IPFIX_sourceIPv6Address())>0 ? convertIPV6AddressNumericToString(IPFIX_sourceIPv6Address()) : "", // standard field 27
+          destinationIPv6Address = size(IPFIX_destinationIPv6Address())>0 ? convertIPV6AddressNumericToString(IPFIX_destinationIPv6Address()) : "", // standard field 28
+          sourceIPv6PrefixLength = IPFIX_sourceIPv6PrefixLength(), // standard field 29
+          destinationIPv6PrefixLength = IPFIX_destinationIPv6PrefixLength(), // standard field 30
+          flowLabelIPv6 = IPFIX_flowLabelIPv6(), // standard field 31
+          icmpTypeCodeIPv4 = IPFIX_icmpTypeCodeIPv4(), // standard field 32
+          igmpType = IPFIX_igmpType(), // standard field 33
+          flowActiveTimeout = IPFIX_flowActiveTimeout(), // standard field 36
+          flowIdleTimeout = IPFIX_flowIdleTimeout(), // standard field 37
+          exportedOctetTotalCount = IPFIX_exportedOctetTotalCount(), // standard field 40
+          exportedMessageTotalCount = IPFIX_exportedMessageTotalCount(), // standard field 41
+          exportedFlowRecordTotalCount = IPFIX_exportedFlowRecordTotalCount(), // standard field 42
+          sourceIPv4Prefix = IPFIX_sourceIPv4Prefix()>0u ? convertIPV4AddressNumericToString(IPFIX_sourceIPv4Prefix()) : "", // standard field 44
+          destinationIPv4Prefix = IPFIX_destinationIPv4Prefix()>0u ? convertIPV4AddressNumericToString(IPFIX_destinationIPv4Prefix()) : "", // standard field 45
+          mplsTopLabelType = IPFIX_mplsTopLabelType(), // standard field 46
+          mplsTopLabelIPv4Address = IPFIX_mplsTopLabelIPv4Address()>0u ? convertIPV4AddressNumericToString(IPFIX_mplsTopLabelIPv4Address()) : "", // standard field 47
+          minimumTTL = IPFIX_minimumTTL(), // standard field 52
+          maximumTTL = IPFIX_maximumTTL(), // standard field 53
+          fragmentIdentification = IPFIX_fragmentIdentification(), // standard field 54
+          postIpClassOfService = IPFIX_postIpClassOfService(), // standard field 55
+          sourceMacAddress = size(IPFIX_sourceMacAddress())>0 ? convertMACAddressNumericToString(IPFIX_sourceMacAddress()) : "", // standard field 56
+          postDestinationMacAddress = size(IPFIX_postDestinationMacAddress())>0 ? convertMACAddressNumericToString(IPFIX_postDestinationMacAddress()) : "", // standard field 57
+          vlanId = IPFIX_vlanId(), // standard field 58
+          postVlanId = IPFIX_postVlanId(), // standard field 59
+          ipVersion = IPFIX_ipVersion(), // standard field 60
+          flowDirection = IPFIX_flowDirection(), // standard field 61
+          ipNextHopIPv6Address = size(IPFIX_ipNextHopIPv6Address())>0 ? convertIPV6AddressNumericToString(IPFIX_ipNextHopIPv6Address()) : "", // standard field 62
+          bgpNextHopIPv6Address = size(IPFIX_bgpNextHopIPv6Address())>0 ? convertIPV6AddressNumericToString(IPFIX_bgpNextHopIPv6Address()) : "", // standard field 63
+          ipv6ExtensionHeaders = IPFIX_ipv6ExtensionHeaders(), // standard field 64
+          mplsTopLabelStackSection = IPFIX_mplsTopLabelStackSection(), // standard field 70
+          mplsLabelStackSection2 = IPFIX_mplsLabelStackSection2(), // standard field 71
+          mplsLabelStackSection3 = IPFIX_mplsLabelStackSection3(), // standard field 72
+          mplsLabelStackSection4 = IPFIX_mplsLabelStackSection4(), // standard field 73
+          mplsLabelStackSection5 = IPFIX_mplsLabelStackSection5(), // standard field 74
+          mplsLabelStackSection6 = IPFIX_mplsLabelStackSection6(), // standard field 75
+          mplsLabelStackSection7 = IPFIX_mplsLabelStackSection7(), // standard field 76
+          mplsLabelStackSection8 = IPFIX_mplsLabelStackSection8(), // standard field 77
+          mplsLabelStackSection9 = IPFIX_mplsLabelStackSection9(), // standard field 78
+          mplsLabelStackSection10 = IPFIX_mplsLabelStackSection10(), // standard field 79
+          destinationMacAddress = size(IPFIX_destinationMacAddress())>0 ? convertMACAddressNumericToString(IPFIX_destinationMacAddress()) : "", // standard field 80
+          postSourceMacAddress = size(IPFIX_postSourceMacAddress())>0 ? convertMACAddressNumericToString(IPFIX_postSourceMacAddress()) : "", // standard field 81
+          octetTotalCount = IPFIX_octetTotalCount(), // standard field 85
+          packetTotalCount = IPFIX_packetTotalCount(), // standard field 86
+          fragmentOffset = IPFIX_fragmentOffset(), // standard field 88
+          mplsVpnRouteDistinguisher = IPFIX_mplsVpnRouteDistinguisher(), // standard field 90
+          bgpNextAdjacentAsNumber = IPFIX_bgpNextAdjacentAsNumber(), // standard field 128
+          bgpPrevAdjacentAsNumber = IPFIX_bgpPrevAdjacentAsNumber(), // standard field 129
+          exporterIPv4Address = IPFIX_exporterIPv4Address()>0u ? convertIPV4AddressNumericToString(IPFIX_exporterIPv4Address()) : "", // standard field 130
+          exporterIPv6Address = size(IPFIX_exporterIPv6Address())>0 ? convertIPV6AddressNumericToString(IPFIX_exporterIPv6Address()) : "", // standard field 131
+          droppedOctetDeltaCount = IPFIX_droppedOctetDeltaCount(), // standard field 132
+          droppedPacketDeltaCount = IPFIX_droppedPacketDeltaCount(), // standard field 133
+          droppedOctetTotalCount = IPFIX_droppedOctetTotalCount(), // standard field 134
+          droppedPacketTotalCount = IPFIX_droppedPacketTotalCount(), // standard field 135
+          flowEndReason = IPFIX_flowEndReason(), // standard field 136
+          commonPropertiesId = IPFIX_commonPropertiesId(), // standard field 137
+          observationPointId = IPFIX_observationPointId(), // standard field 138
+          icmpTypeCodeIPv6 = IPFIX_icmpTypeCodeIPv6(), // standard field 139
+          mplsTopLabelIPv6Address = size(IPFIX_mplsTopLabelIPv6Address())>0 ? convertIPV6AddressNumericToString(IPFIX_mplsTopLabelIPv6Address()) : "", // standard field 140
+          lineCardId = IPFIX_lineCardId(), // standard field 141
+          portId = IPFIX_portId(), // standard field 142
+          meteringProcessId = IPFIX_meteringProcessId(), // standard field 143
+          exportingProcessId = IPFIX_exportingProcessId(), // standard field 144
+          templateId = IPFIX_templateId(), // standard field 145
+          wlanChannelId = IPFIX_wlanChannelId(), // standard field 146
+          wlanSSID = IPFIX_wlanSSID(), // standard field 147
+          flowId = IPFIX_flowId(), // standard field 148
+          observationDomainId = IPFIX_observationDomainId(), // standard field 149
+          flowStartSeconds = IPFIX_flowStartSeconds()>0u ? formatEpochDateTime( (float64)IPFIX_flowStartSeconds() ) : "", // standard field 150
+          flowEndSeconds = IPFIX_flowEndSeconds()>0u ? formatEpochDateTime( (float64)IPFIX_flowEndSeconds() ) : "", // standard field 151
+          flowStartMilliseconds = IPFIX_flowStartMilliseconds()>0ul ? formatEpochDateTime( (float64)IPFIX_flowStartMilliseconds() / 1000.0 ) : "", // standard field 152
+          flowEndMilliseconds = IPFIX_flowEndMilliseconds()>0ul ? formatEpochDateTime( (float64)IPFIX_flowEndMilliseconds() / 1000.0 ) : "", // standard field 153
+          flowStartMicroseconds = IPFIX_flowStartMicroseconds()>0ul ? formatEpochDateTime( (float64)IPFIX_flowStartMicroseconds() / 1000000.0 ) : "", // standard field 154
+          flowEndMicroseconds = IPFIX_flowEndMicroseconds()>0ul ? formatEpochDateTime( (float64)IPFIX_flowEndMicroseconds() / 1000000.0 ) : "", // standard field 155
+          flowStartNanoseconds = IPFIX_flowStartNanoseconds()>0ul ? formatEpochDateTime( (float64)IPFIX_flowStartNanoseconds() / 1000000000.0 ) : "", // standard field 156
+          flowEndNanoseconds = IPFIX_flowEndNanoseconds()>0ul ? formatEpochDateTime( (float64)IPFIX_flowEndNanoseconds() / 1000000000.0 ) : "", // standard field 157
+          flowStartDeltaMicroseconds = IPFIX_flowStartDeltaMicroseconds(), // standard field 158
+          flowEndDeltaMicroseconds = IPFIX_flowEndDeltaMicroseconds(), // standard field 159
+          systemInitTimeMilliseconds = IPFIX_systemInitTimeMilliseconds()>0ul ? formatEpochDateTime( (float64)IPFIX_systemInitTimeMilliseconds() / 1000.0 ) : "", // standard field 160
+          flowDurationMilliseconds = IPFIX_flowDurationMilliseconds()>0u ? formatElapsedTime(( float64)IPFIX_flowDurationMilliseconds() / 1000.0 ) : "", // standard field 161
+          flowDurationMicroseconds = IPFIX_flowDurationMicroseconds()>0u ? formatElapsedTime(( float64)IPFIX_flowDurationMicroseconds() / 1000000.0 ) : "", // standard field 162
+          observedFlowTotalCount = IPFIX_observedFlowTotalCount(), // standard field 163
+          ignoredPacketTotalCount = IPFIX_ignoredPacketTotalCount(), // standard field 164
+          ignoredOctetTotalCount = IPFIX_ignoredOctetTotalCount(), // standard field 165
+          notSentFlowTotalCount = IPFIX_notSentFlowTotalCount(), // standard field 166
+          notSentPacketTotalCount = IPFIX_notSentPacketTotalCount(), // standard field 167
+          notSentOctetTotalCount = IPFIX_notSentOctetTotalCount(), // standard field 168
+          destinationIPv6Prefix = size(IPFIX_destinationIPv6Prefix())>0 ? convertIPV6AddressNumericToString(IPFIX_destinationIPv6Prefix()) : "", // standard field 169
+          sourceIPv6Prefix = size(IPFIX_sourceIPv6Prefix())>0 ? convertIPV6AddressNumericToString(IPFIX_sourceIPv6Prefix()) : "", // standard field 170
+          postOctetTotalCount = IPFIX_postOctetTotalCount(), // standard field 171
+          postPacketTotalCount = IPFIX_postPacketTotalCount(), // standard field 172
+          flowKeyIndicator = IPFIX_flowKeyIndicator(), // standard field 173
+          postMCastPacketTotalCount = IPFIX_postMCastPacketTotalCount(), // standard field 174
+          postMCastOctetTotalCount = IPFIX_postMCastOctetTotalCount(), // standard field 175
+          icmpTypeIPv4 = IPFIX_icmpTypeIPv4(), // standard field 176
+          icmpCodeIPv4 = IPFIX_icmpCodeIPv4(), // standard field 177
+          icmpTypeIPv6 = IPFIX_icmpTypeIPv6(), // standard field 178
+          icmpCodeIPv6 = IPFIX_icmpCodeIPv6(), // standard field 179
+          udpSourcePort = IPFIX_udpSourcePort(), // standard field 180
+          udpDestinationPort = IPFIX_udpDestinationPort(), // standard field 181
+          tcpSourcePort = IPFIX_tcpSourcePort(), // standard field 182
+          tcpDestinationPort = IPFIX_tcpDestinationPort(), // standard field 183
+          tcpSequenceNumber = IPFIX_tcpSequenceNumber(), // standard field 184
+          tcpAcknowledgementNumber = IPFIX_tcpAcknowledgementNumber(), // standard field 185
+          tcpWindowSize = IPFIX_tcpWindowSize(), // standard field 186
+          tcpUrgentPointer = IPFIX_tcpUrgentPointer(), // standard field 187
+          tcpHeaderLength = IPFIX_tcpHeaderLength(), // standard field 188
+          ipHeaderLength = IPFIX_ipHeaderLength(), // standard field 189
+          totalLengthIPv4 = IPFIX_totalLengthIPv4(), // standard field 190
+          payloadLengthIPv6 = IPFIX_payloadLengthIPv6(), // standard field 191
+          ipTTL = IPFIX_ipTTL(), // standard field 192
+          nextHeaderIPv6 = IPFIX_nextHeaderIPv6(), // standard field 193
+          mplsPayloadLength = IPFIX_mplsPayloadLength(), // standard field 194
+          ipDiffServCodePoint = IPFIX_ipDiffServCodePoint(), // standard field 195
+          ipPrecedence = IPFIX_ipPrecedence(), // standard field 196
+          fragmentFlags = IPFIX_fragmentFlags(), // standard field 197
+          octetDeltaSumOfSquares = IPFIX_octetDeltaSumOfSquares(), // standard field 198
+          octetTotalSumOfSquares = IPFIX_octetTotalSumOfSquares(), // standard field 199
+          mplsTopLabelTTL = IPFIX_mplsTopLabelTTL(), // standard field 200
+          mplsLabelStackLength = IPFIX_mplsLabelStackLength(), // standard field 201
+          mplsLabelStackDepth = IPFIX_mplsLabelStackDepth(), // standard field 202
+          mplsTopLabelExp = IPFIX_mplsTopLabelExp(), // standard field 203
+          ipPayloadLength = IPFIX_ipPayloadLength(), // standard field 204
+          udpMessageLength = IPFIX_udpMessageLength(), // standard field 205
+          isMulticast = IPFIX_isMulticast(), // standard field 206
+          ipv4IHL = IPFIX_ipv4IHL(), // standard field 207
+          ipv4Options = IPFIX_ipv4Options(), // standard field 208
+          tcpOptions = IPFIX_tcpOptions(), // standard field 209
+          paddingOctets = IPFIX_paddingOctets(), // standard field 210
+          collectorIPv4Address = IPFIX_collectorIPv4Address()>0u ? convertIPV4AddressNumericToString(IPFIX_collectorIPv4Address()) : "", // standard field 211
+          collectorIPv6Address = size(IPFIX_collectorIPv6Address())>0 ? convertIPV6AddressNumericToString(IPFIX_collectorIPv6Address()) : "", // standard field 212
+          exportInterface = IPFIX_exportInterface(), // standard field 213
+          exportProtocolVersion = IPFIX_exportProtocolVersion(), // standard field 214
+          exportTransportProtocol = IPFIX_exportTransportProtocol(), // standard field 215
+          collectorTransportPort = IPFIX_collectorTransportPort(), // standard field 216
+          exporterTransportPort = IPFIX_exporterTransportPort(), // standard field 217
+          tcpSynTotalCount = IPFIX_tcpSynTotalCount(), // standard field 218
+          tcpFinTotalCount = IPFIX_tcpFinTotalCount(), // standard field 219
+          tcpRstTotalCount = IPFIX_tcpRstTotalCount(), // standard field 220
+          tcpPshTotalCount = IPFIX_tcpPshTotalCount(), // standard field 221
+          tcpAckTotalCount = IPFIX_tcpAckTotalCount(), // standard field 222
+          tcpUrgTotalCount = IPFIX_tcpUrgTotalCount(), // standard field 223
+          ipTotalLength = IPFIX_ipTotalLength(), // standard field 224
+          postMplsTopLabelExp = IPFIX_postMplsTopLabelExp(), // standard field 237
+          tcpWindowScale = IPFIX_tcpWindowScale(); // standard field 238
+        IPFIXParseErrorStream:
+          //parseErrorCode = parseErrorCode(), // Didn't exist in version of toolkit using
+          parseErrorDescription = parseErrorDescription(),
+          parseErrorOffset = parseErrorOffset();
+    }
+
+() as NetezzaSink = Custom(IPFIXMessageStream)
+{}
+
+() as IPFIXParseErrorSink = Custom(IPFIXParseErrorStream)
+{}
+
+
+}
