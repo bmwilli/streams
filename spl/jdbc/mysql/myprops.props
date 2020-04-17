@@ -1,0 +1,3 @@
+user=ibmadmin
+password=Str3@msIsF@st3st
+jdbcurl=jdbc:mysql://localhost:3306/streams?serverTimezone=UTC
