@@ -25,5 +25,14 @@ composite SubComposite ( output SubCompOut; input SubCompIn) {
   graph
     stream <MainTupleType> SubCompFunctor = Functor(SubCompIn) {}
 
+    stream <MainTupleType> SubCompToSubComp = SubSubComposite(SubCompFunctor){}
+
     stream <MainTupleType> SubCompOut = Functor(SubCompFunctor) {}
+}
+
+composite SubSubComposite ( output SubSubCompOut; input SubSubCompIn) {
+  graph
+    stream <MainTupleType> SubSubCompFunctor = Functor(SubSubCompIn) {}
+
+    stream <MainTupleType> SubSubCompOut = Functor(SubSubCompFunctor) {}
 }
