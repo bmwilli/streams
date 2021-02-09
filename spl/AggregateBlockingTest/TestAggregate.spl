@@ -1,0 +1,34 @@
+composite TestAggregate {
+  graph
+    stream<rstring[10000] name, list<rstring[5000]>[100] junk, rstring category, uint32 value> Beacon1 = Beacon() {
+      //param
+        //period : 0.001;
+      output
+        Beacon1: name = (rstring[10000])("Employee#" + (rstring)(IterationCount() % 500ul)),
+                 category = "Category#" + (rstring)(IterationCount() % 10ul),
+                 value = 1u;
+    }
+
+    stream<Beacon1> IngestQueue = Custom(Beacon1) {
+      logic
+        onTuple Beacon1 : submit(Beacon1,IngestQueue);
+      config
+        threadedPort : queue(Beacon1, Sys.Wait, 100000);
+    }
+
+    stream<rstring[10000] name,uint32 value, uint32 avg, int32 count, int32 countCategories, list<rstring>categories> AggStream = Aggregate(IngestQueue) {
+      window IngestQueue : tumbling, time(120.0), partitioned;
+      param groupBy : category;
+            partitionBy: name;
+      output AggStream : value = Sum(IngestQueue.value),
+                         avg = Average(IngestQueue.value),
+                         count = Count(),
+                         countCategories = CountDistinct(category),
+                         categories = CollectDistinct(category);
+    }
+
+    () as Ouput = Custom(AggStream) {
+    }
+
+   
+}

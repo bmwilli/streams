@@ -1,7 +1,7 @@
 composite CongestedJob {
   graph
     stream <rstring msg, uint64 i> BeaconStream = Beacon() {
-      param period : 0.01;
+      param period : 0.002;
       output BeaconStream : msg = "Hello, World #" + (rstring)IterationCount(), i = IterationCount();
       config placement : partitionExlocation("Separate");
     }

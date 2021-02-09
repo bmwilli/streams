@@ -1,0 +1,76 @@
+/*
+** Copyright (C) 2015  International Business Machines Corporation
+** All Rights Reserved
+*/
+
+
+use com.ibm.streamsx.jdbc::JDBCRun;
+use com.ibm.streamsx.jdbc.types::JdbcSqlStatus_T;
+
+composite DBTest {
+
+    param
+
+        expression<rstring> $jdbcDriverLib : getSubmissionTimeValue("jdbcDriverLib","/home/streamsadmin/git/streams/spl/Network/dbload/opt/nzjdbc3.jar");
+        //expression<rstring> $jdbcDriverLib : getSubmissionTimeValue("jdbcDriverLib","/usr/local/nz/lib/nzjdbc3.jar");
+        expression<rstring> $jdbcClassName : getSubmissionTimeValue("jdbcClassName","org.netezza.Driver");
+        expression<rstring> $jdbcUrlPrefix : getSubmissionTimeValue("jdbcUrlPrefix","jdbc:netezza://");
+        expression<rstring> $dbhost : getSubmissionTimeValue("dbhost","10.75.17.70");
+        expression<rstring> $dbport : getSubmissionTimeValue("dbport","5480");
+        expression<rstring> $dbuser : getSubmissionTimeValue("dbuser","admin");
+        expression<rstring> $dbpassword : getSubmissionTimeValue("dbpassword","c8r7mxns");
+        expression<rstring> $dbname : getSubmissionTimeValue("dbname","IPFIX_DEMO_DB");
+        //expression<rstring> $dbschema : getSubmissionTimeValue("dbschema","ADMIN");
+        expression<rstring> $dbschema : getSubmissionTimeValue("dbschema","JONATHAN");
+        expression<rstring> $dbtable : getSubmissionTimeValue("dbtable","BRIANTEST");
+        expression<int32>   $dbbatchsize : (int32)getSubmissionTimeValue("dbbatchsize","1");
+
+
+    graph
+
+
+    stream<rstring trigger> Trigger = Beacon() {
+        param
+                iterations : 1u;
+    }
+
+    (stream<rstring NOW, JdbcSqlStatus_T sqlStatus> DBRun;
+     stream<JdbcSqlStatus_T sqlStatus> DBError) = JDBCRun(Trigger) {
+        param
+            jdbcDriverLib : $jdbcDriverLib;
+            jdbcClassName : $jdbcClassName;
+            //jdbcUrl : $jdbcUrlPrefix + $dbhost + ":" + $dbport + "/" + $dbname + ";user=admin;password=yyy;loglevel=2;logdirpath=";
+            jdbcUrl : $jdbcUrlPrefix + $dbhost + ":" + $dbport + "/" + $dbname + ";loglevel=2;logdirpath=";
+
+            jdbcUser : $dbuser;
+            jdbcPassword : $dbpassword;
+
+            //credentials : '{"username":"xxx","password":"yyy","jdbcUrl":"jdbc:netezza://10.75.17.70/IPFIX_DEMO_DB"}';
+            isolationLevel : "JDBC_TRANSACTION_READ_UNCOMMITTED";
+            batchSize : $dbbatchsize;
+
+            sqlFailureAction: "terminate";
+
+            //statement : "INSERT INTO " + $dbschema + "." + $dbtable + " VALUES (" +
+            //    "? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?)";
+
+            //statementParamAttrs: "captureTime , messageNumber , ipProtocol , ipSourceAddress , ipSourcePort , ipDestinationAddress , ipDestinationPort , octetDeltaCount , packetDeltaCount , protocolIdentifier , ipClassOfService , tcpControlBits , sourceTransportPort , sourceIPv4Address , sourceIPv4PrefixLength , ingressInterface , destinationTransportPort , destinationIPv4Address , destinationIPv4PrefixLength , egressInterface , ipNextHopIPv4Address , bgpSourceAsNumber , bgpDestinationAsNumber , bgpNextHopIPv4Address , postMCastPacketDeltaCount , postMCastOctetDeltaCount , flowEndSysUpTime , flowStartSysUpTime , postOctetDeltaCount , postPacketDeltaCount , minimumIpTotalLength , maximumIpTotalLength , sourceIPv6Address , destinationIPv6Address , sourceIPv6PrefixLength , destinationIPv6PrefixLength , flowLabelIPv6 , icmpTypeCodeIPv4 , igmpType , flowActiveTimeout , flowIdleTimeout , exportedOctetTotalCount , exportedMessageTotalCount , exportedFlowRecordTotalCount , sourceIPv4Prefix , destinationIPv4Prefix , mplsTopLabelType , mplsTopLabelIPv4Address , minimumTTL , maximumTTL , fragmentIdentification , postIpClassOfService , sourceMacAddress , postDestinationMacAddress , vlanId , postVlanId , ipVersion , flowDirection , ipNextHopIPv6Address , bgpNextHopIPv6Address , ipv6ExtensionHeaders , mplsTopLabelStackSection , mplsLabelStackSection2 , mplsLabelStackSection3 , mplsLabelStackSection4 , mplsLabelStackSection5 , mplsLabelStackSection6 , mplsLabelStackSection7 , mplsLabelStackSection8 , mplsLabelStackSection9 , mplsLabelStackSection10 , destinationMacAddress , postSourceMacAddress , octetTotalCount , packetTotalCount , fragmentOffset , mplsVpnRouteDistinguisher , bgpNextAdjacentAsNumber , bgpPrevAdjacentAsNumber , exporterIPv4Address , exporterIPv6Address , droppedOctetDeltaCount , droppedPacketDeltaCount , droppedOctetTotalCount , droppedPacketTotalCount , flowEndReason , commonPropertiesId , observationPointId , icmpTypeCodeIPv6 , mplsTopLabelIPv6Address , lineCardId , portId , meteringProcessId , exportingProcessId , templateId , wlanChannelId , wlanSSID , flowId , observationDomainId , flowStartSeconds , flowEndSeconds , flowStartMilliseconds , flowEndMilliseconds , flowStartMicroseconds , flowEndMicroseconds , flowStartNanoseconds , flowEndNanoseconds , flowStartDeltaMicroseconds , flowEndDeltaMicroseconds , systemInitTimeMilliseconds , flowDurationMilliseconds , flowDurationMicroseconds , observedFlowTotalCount , ignoredPacketTotalCount , ignoredOctetTotalCount , notSentFlowTotalCount , notSentPacketTotalCount , notSentOctetTotalCount , destinationIPv6Prefix , sourceIPv6Prefix , postOctetTotalCount , postPacketTotalCount , flowKeyIndicator , postMCastPacketTotalCount , postMCastOctetTotalCount , icmpTypeIPv4 , icmpCodeIPv4 , icmpTypeIPv6 , icmpCodeIPv6 , udpSourcePort , udpDestinationPort , tcpSourcePort , tcpDestinationPort , tcpSequenceNumber , tcpAcknowledgementNumber , tcpWindowSize , tcpUrgentPointer , tcpHeaderLength , ipHeaderLength , totalLengthIPv4 , payloadLengthIPv6 , ipTTL , nextHeaderIPv6 , mplsPayloadLength , ipDiffServCodePoint , ipPrecedence , fragmentFlags , octetDeltaSumOfSquares , octetTotalSumOfSquares , mplsTopLabelTTL , mplsLabelStackLength , mplsLabelStackDepth , mplsTopLabelExp , ipPayloadLength , udpMessageLength , isMulticast , ipv4IHL , ipv4Options , tcpOptions , paddingOctets , collectorIPv4Address , collectorIPv6Address , exportInterface , exportProtocolVersion , exportTransportProtocol , collectorTransportPort , exporterTransportPort , tcpSynTotalCount , tcpFinTotalCount , tcpRstTotalCount , tcpPshTotalCount , tcpAckTotalCount , tcpUrgTotalCount , ipTotalLength , postMplsTopLabelExp , tcpWindowScale";
+
+            // Remove LIST and BLIST types as they are not supported
+            // Future: Look to convert them to something else before inserting
+            statement : "SELECT now()" ;
+            //statementParamAttrs: "captureTime , messageNumber , ipProtocol , ipSourceAddress , ipSourcePort , ipDestinationAddress , ipDestinationPort , octetDeltaCount , packetDeltaCount , protocolIdentifier , ipClassOfService , tcpControlBits , sourceTransportPort , sourceIPv4Address , sourceIPv4PrefixLength , ingressInterface , destinationTransportPort , destinationIPv4Address , destinationIPv4PrefixLength , egressInterface , ipNextHopIPv4Address , bgpSourceAsNumber , bgpDestinationAsNumber , bgpNextHopIPv4Address , postMCastPacketDeltaCount , postMCastOctetDeltaCount , flowEndSysUpTime , flowStartSysUpTime , postOctetDeltaCount , postPacketDeltaCount , minimumIpTotalLength , maximumIpTotalLength , sourceIPv6Address , destinationIPv6Address , sourceIPv6PrefixLength , destinationIPv6PrefixLength , flowLabelIPv6 , icmpTypeCodeIPv4 , igmpType , flowActiveTimeout , flowIdleTimeout , exportedOctetTotalCount , exportedMessageTotalCount , exportedFlowRecordTotalCount , sourceIPv4Prefix , destinationIPv4Prefix , mplsTopLabelType , mplsTopLabelIPv4Address , minimumTTL , maximumTTL , fragmentIdentification , postIpClassOfService , sourceMacAddress , postDestinationMacAddress , vlanId , postVlanId , ipVersion , flowDirection , ipNextHopIPv6Address , bgpNextHopIPv6Address , ipv6ExtensionHeaders , destinationMacAddress , postSourceMacAddress , octetTotalCount , packetTotalCount , fragmentOffset , bgpNextAdjacentAsNumber , bgpPrevAdjacentAsNumber , exporterIPv4Address , exporterIPv6Address , droppedOctetDeltaCount , droppedPacketDeltaCount , droppedOctetTotalCount , droppedPacketTotalCount , flowEndReason , commonPropertiesId , observationPointId , icmpTypeCodeIPv6 , mplsTopLabelIPv6Address , lineCardId , portId , meteringProcessId , exportingProcessId , templateId , wlanChannelId , wlanSSID , flowId , observationDomainId , flowStartSeconds , flowEndSeconds , flowStartMilliseconds , flowEndMilliseconds , flowStartMicroseconds , flowEndMicroseconds , flowStartNanoseconds , flowEndNanoseconds , flowStartDeltaMicroseconds , flowEndDeltaMicroseconds , systemInitTimeMilliseconds , flowDurationMilliseconds , flowDurationMicroseconds , observedFlowTotalCount , ignoredPacketTotalCount , ignoredOctetTotalCount , notSentFlowTotalCount , notSentPacketTotalCount , notSentOctetTotalCount , destinationIPv6Prefix , sourceIPv6Prefix , postOctetTotalCount , postPacketTotalCount , flowKeyIndicator , postMCastPacketTotalCount , postMCastOctetTotalCount , icmpTypeIPv4 , icmpCodeIPv4 , icmpTypeIPv6 , icmpCodeIPv6 , udpSourcePort , udpDestinationPort , tcpSourcePort , tcpDestinationPort , tcpSequenceNumber , tcpAcknowledgementNumber , tcpWindowSize , tcpUrgentPointer , tcpHeaderLength , ipHeaderLength , totalLengthIPv4 , payloadLengthIPv6 , ipTTL , nextHeaderIPv6 , mplsPayloadLength , ipDiffServCodePoint , ipPrecedence , fragmentFlags , octetDeltaSumOfSquares , octetTotalSumOfSquares , mplsTopLabelTTL , mplsLabelStackLength , mplsLabelStackDepth , mplsTopLabelExp , ipPayloadLength , udpMessageLength , isMulticast , ipv4IHL , ipv4Options , tcpOptions , collectorIPv4Address , collectorIPv6Address , exportInterface , exportProtocolVersion , exportTransportProtocol , collectorTransportPort , exporterTransportPort , tcpSynTotalCount , tcpFinTotalCount , tcpRstTotalCount , tcpPshTotalCount , tcpAckTotalCount , tcpUrgTotalCount , ipTotalLength , postMplsTopLabelExp , tcpWindowScale";
+            sqlStatusAttr : "sqlStatus";
+    }
+
+    () as DBRunSink = Custom(DBRun as datain) {
+        logic
+            onTuple datain : println("Result: " + (rstring)datain);
+    }
+
+    () as DBErrorSink = Custom(DBError as datain) {
+        logic
+            onTuple datain : println("Error: " + (rstring)datain);
+    }
+}
+
