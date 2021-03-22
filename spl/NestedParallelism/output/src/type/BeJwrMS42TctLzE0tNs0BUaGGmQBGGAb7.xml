@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<tupleModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/tuple" class="BeJwrMS42TctLzE0tNs0BUaGGmQBGGAb7" equalitySupported="true" facade="false" splType="tuple&lt;rstring fname,rstring lname,uint64 i>" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <headers/>
+
+  <attributes>
+    <attribute>
+      <name>fname</name>
+      <cppType>SPL::rstring</cppType>
+      <splType>rstring</splType>
+    </attribute>
+    <attribute>
+      <name>lname</name>
+      <cppType>SPL::rstring</cppType>
+      <splType>rstring</splType>
+    </attribute>
+    <attribute>
+      <name>i</name>
+      <cppType>SPL::uint64</cppType>
+      <splType>uint64</splType>
+    </attribute>
+  </attributes>
+
+</tupleModel>

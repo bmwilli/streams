@@ -1,0 +1,3 @@
+	@$(CXX_LN) $(SPL_CXXFLAGS) -o bin/DataFeed.DataFeed.so -fPIC -shared $(SODataFeed.DataFeed) $(SPL_LDFLAGS)\
+	    build/operator/DataFeed/DataFeed.o \
+	    build/type/BeJwrMSk2NEvOz8tLTS7JzM9zzs9Ly0wvNk3LS8xNLTbNAVGhhpkAF5AOBc.o 

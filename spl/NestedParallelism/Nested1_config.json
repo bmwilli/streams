@@ -1,0 +1,111 @@
+{
+  "jobConfigOverlays": [
+    {
+      "jobConfig": {
+        "jobName": "app::Nested1",
+        "jobGroup": "default",
+        "submissionParameters": [
+          {
+            "name": "parserCount",
+            "value": "2"
+          },
+          {
+            "name": "connectionCount",
+            "value": "3"
+          },
+          {
+            "name": "streams::pe.display",
+            "value": "aws01.ec2.internal:55"
+          },
+          {
+            "name": "parserConfigList",
+            "value": "[[\u0027A\u0027,\u0027B\u0027],[\u0027C\u0027,\u0027D\u0027],[\u0027E\u0027,\u0027F\u0027]]"
+          },
+          {
+            "name": "connectionConfigList",
+            "value": "Connection0,Connection1,Connection2"
+          }
+        ]
+      },
+      "deploymentConfig": {
+        "placementScheme": "balancedInstance",
+        "fusionScheme": "legacy",
+        "parallelRegionConfig": {
+          "fusionType": "channelIsolation"
+        }
+      },
+      "operatorConfigs": {
+        "operators": [
+          {
+            "nameSpec": "Sink"
+          },
+          {
+            "nameSpec": "DataFeed[0].DataFeed"
+          },
+          {
+            "nameSpec": "DataFeed[0].ParserOutput[0].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[0].ParserOutput[1].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[1].ParserOutput[2].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[1].ParserOutput[3].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[1].DataFeed"
+          },
+          {
+            "nameSpec": "DataFeed[2].ParserOutput[4].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[2].ParserOutput[5].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[2].DataFeed"
+          }
+        ],
+        "poolPlacementGroups": [
+          {
+            "name": "$default",
+            "operatorsInPool": [
+              {
+                "nameSpec": "DataFeed[2].ParserOutput[4].ParserOutput"
+              },
+              {
+                "nameSpec": "DataFeed[0].DataFeed"
+              },
+              {
+                "nameSpec": "Sink"
+              },
+              {
+                "nameSpec": "DataFeed[0].ParserOutput[0].ParserOutput"
+              },
+              {
+                "nameSpec": "DataFeed[0].ParserOutput[1].ParserOutput"
+              },
+              {
+                "nameSpec": "DataFeed[1].ParserOutput[2].ParserOutput"
+              },
+              {
+                "nameSpec": "DataFeed[1].ParserOutput[3].ParserOutput"
+              },
+              {
+                "nameSpec": "DataFeed[1].DataFeed"
+              },
+              {
+                "nameSpec": "DataFeed[2].DataFeed"
+              },
+              {
+                "nameSpec": "DataFeed[2].ParserOutput[5].ParserOutput"
+              }
+            ],
+            "tags": []
+          }
+        ]
+      }
+    }
+  ]
+}
