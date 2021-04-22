@@ -1,0 +1,4 @@
+	@$(CXX_LN) $(SPL_CXXFLAGS) -o bin/DataFeed.ParserOutput.ParserOutput.so -fPIC -shared $(SODataFeed.ParserOutput.ParserOutput) $(SPL_LDFLAGS)\
+	    build/operator/DataFeed/ParserOutput/ParserOutput.o \
+	    build/type/BeJwrMSk2NEvOz8tLTS7JzM9zzs9Ly0wvNk3LS8xNLTbNAVGhhpkAF5AOBc.o \
+	    build/type/BeJwrMS02NEvOz8tLTS7JzM9zzs9Ly0wvNk3LS8xNLTbNAVGhhpnFhkYFiUXFqUUQeQAbPBQW.o 

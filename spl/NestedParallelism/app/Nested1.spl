@@ -1,0 +1,95 @@
+namespace app;
+
+type mytype =
+  rstring connectionConfig,
+  rstring fname,
+  rstring lname,
+  uint64 i
+;
+
+type mytype2 =
+  mytype,
+  tuple<rstring parserConfig>
+;
+
+composite Nested1 {
+  param
+    expression<list<rstring>> $connectionConfigList : getSubmissionTimeListValue("connectionConfigList");
+    expression<int32> $connectionCount : (int32)getSubmissionTimeValue("connectionCount");
+    //expression<list<int32>> $parserCountList : (list<int32>)getSubmissionTimeListValue("parserCountList");
+    expression<int32> $parserCount : (int32)getSubmissionTimeValue("parserCount");
+    //expression<list<rstring>> $parserConfigList : getSubmissionTimeListValue("parserConfigList");
+    expression<rstring> $parserConfigListLiteral : getSubmissionTimeValue("parserConfigList");
+
+  graph
+
+    @parallel(width=$connectionCount)
+    stream <mytype2> DataFeed = Feeder(){
+      param
+        connectionConfig : $connectionConfigList[getChannel()]; 
+        parserCount : $parserCount;
+        //parserConfigList : ((list<rstring>)$parserConfigList)[getChannel()]; 
+        parserConfigListLiteral : $parserConfigListLiteral;  
+      config
+        placement : partitionColocation(byChannel());  
+        //placement : partitionColocation("main" + (rstring)getLocalChannel());  
+
+    }
+ 
+    () as Sink = Custom(DataFeed as In) {
+    }
+}
+
+public composite Feeder (output ParserOutput) {
+  param
+    expression<rstring> $connectionConfig;
+    expression<int32> $parserCount;
+    //expression<list<rstring>> $parserConfigList;
+    expression<rstring> $parserConfigListLiteral;
+
+  graph
+    stream <mytype> DataFeed = Custom() {
+      logic
+        state : {
+          mutable DataFeed t = (DataFeed){};
+          mutable uint64 c = 0ul;
+        }
+        onProcess: {
+          while (!isShutdown()) {
+            t.connectionConfig = $connectionConfig;
+            t.fname = "Brian";
+            t.lname = "Williams";
+            t.i = c++;
+            submit(t,DataFeed);
+            block(0.1);
+          }
+        }    
+    }
+
+    //@parallel(width=$parserCount)
+    @parallel(width=$parserCount)
+    stream<mytype2> ParserOutput = Parser(DataFeed) {
+      param
+        parserConfigListLiteral : $parserConfigListLiteral;
+    }
+  //config
+    //placement : partitionColocation("main" + (rstring)getChannel()); 
+}
+
+public composite Parser (output ParserOutput; input ParserInput) {
+  param
+    expression<rstring> $parserConfigListLiteral;
+  graph
+    stream <mytype2> ParserOutput = Functor(ParserInput) {
+      output ParserOutput : parserConfig = ((list<list<rstring>>)$parserConfigListLiteral)[getAllChannels()[1]][getLocalChannel()];
+      //output ParserOutput : parserConfig = "getAllChannels=" + (rstring)getAllChannels() + ", getChannel()=" + (rstring)getChannel() + ", getLocalChannel()=" + (rstring)getLocalChannel();
+      //output ParserOutput : parserConfig =
+      //  "Literal = " + (rstring)((list<list<rstring>>)$parserConfigListLiteral) +
+      //  ", getAllChannels() = " + (rstring)getAllChannels() +
+      //  ", getAllChannels()[0] = " + (rstring)getAllChannels()[0] +
+      //  ", getAllChannels()[1] = " + (rstring)getAllChannels()[1] + 
+      //  ", getLocalChannel() = "+ (rstring)getLocalChannel() +
+      //  ", literal[2][1] = " + ((list<list<rstring>>)$parserConfigListLiteral)[2][1];
+
+    }
+}

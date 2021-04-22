@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<applicationSet xmlns="http://www.ibm.com/xmlns/prod/streams/application/v4200" name="app::Nested1.appset" xmlns:tt="http://www.ibm.com/xmlns/prod/streams/spl/tupleType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <description>app::Nested1 application set</description>
+
+  <splApplication adlPath="output/app.Nested1.adl" applicationDirectory="toolkits/NestedParallelism" applicationScope="Default" avoidRuntimeYield="auto" buildId="" bundle="./app.Nested1.sab" checkpointDirectory="/home/brian/git/bmwilli/streams/spl/NestedParallelism/-a/ckpt" dataDirectory="/home/brian/git/bmwilli/streams/spl/NestedParallelism/-a" name="app::Nested1" outputDirectory="output" productVersion="4.3.0.2" standaloneApplicationDirectory="toolkits/NestedParallelism" version="1.0.0">
+    <libraries/>
+    <hostpools>
+      <hostpool index="0" membershipMode="shared" name="$default"/>
+    </hostpools>
+    <tupleTypes>
+      <tupleType index="0">
+        <attribute name="connectionConfig" type="rstring"/>
+        <attribute name="fname" type="rstring"/>
+        <attribute name="lname" type="rstring"/>
+        <attribute name="i" type="uint64"/>
+        <tuple>
+          <tt:attr name="connectionConfig" type="rstring"/>
+          <tt:attr name="fname" type="rstring"/>
+          <tt:attr name="lname" type="rstring"/>
+          <tt:attr name="i" type="uint64"/>
+        </tuple>
+      </tupleType>
+      <tupleType index="1">
+        <attribute name="connectionConfig" type="rstring"/>
+        <attribute name="fname" type="rstring"/>
+        <attribute name="lname" type="rstring"/>
+        <attribute name="i" type="uint64"/>
+        <attribute name="parserConfig" type="rstring"/>
+        <tuple>
+          <tt:attr name="connectionConfig" type="rstring"/>
+          <tt:attr name="fname" type="rstring"/>
+          <tt:attr name="lname" type="rstring"/>
+          <tt:attr name="i" type="uint64"/>
+          <tt:attr name="parserConfig" type="rstring"/>
+        </tuple>
+      </tupleType>
+    </tupleTypes>
+    <primitiveOperDefinitions>
+      <primitiveOperDefinition index="0" kind="spl.relational::Functor" runtimeType="SPL_CPlusPlus" toolkitIndex="1"/>
+      <primitiveOperDefinition index="1" kind="spl.utility::Custom" runtimeType="SPL_CPlusPlus" toolkitIndex="1"/>
+    </primitiveOperDefinitions>
+    <composites>
+      <sourceUris>
+        <uri index="0" path="file:///home/brian/git/bmwilli/streams/spl/NestedParallelism/app/Nested1.spl"/>
+      </sourceUris>
+      <compositeOperDefinitions>
+        <compositeOperDefinition endLine="41" index="0" kind="app::Nested1" numberOfInputPorts="0" numberOfOutputPorts="0" sourceIndex="0" startLine="15" toolkitIndex="0">
+          <description>app::Nested1 Composite</description>
+        </compositeOperDefinition>
+        <compositeOperDefinition endLine="77" index="1" kind="app::Feeder" numberOfInputPorts="0" numberOfOutputPorts="1" sourceIndex="0" startLine="43" toolkitIndex="0">
+          <description>app::Feeder Composite</description>
+        </compositeOperDefinition>
+        <compositeOperDefinition endLine="95" index="2" kind="app::Parser" numberOfInputPorts="1" numberOfOutputPorts="1" sourceIndex="0" startLine="79" toolkitIndex="0">
+          <description>app::Parser Composite</description>
+        </compositeOperDefinition>
+      </compositeOperDefinitions>
+      <compositeOperInstances>
+        <compositeOperInstance definitionIndex="0" endLine="41" index="3" name="app::Nested1" sourceIndex="0" startLine="15">
+          <compositeOperInstance definitionIndex="1" endLine="37" index="4" name="DataFeed" sourceIndex="0" startLine="26">
+            <outputPorts>
+              <port index="0">
+                <incomingConnections>
+                  <connection operIndex="5" operName="DataFeed.ParserOutput" portIndex="0" portKind="output"/>
+                </incomingConnections>
+                <outgoingConnections>
+                  <connection operIndex="0" operName="Sink" portIndex="0" portKind="input"/>
+                </outgoingConnections>
+              </port>
+            </outputPorts>
+            <compositeOperInstance definitionIndex="2" endLine="74" index="5" name="DataFeed.ParserOutput" sourceIndex="0" startLine="70">
+              <inputPorts>
+                <port index="0">
+                  <incomingConnections>
+                    <connection operIndex="1" operName="DataFeed.DataFeed" portIndex="0" portKind="output"/>
+                  </incomingConnections>
+                  <outgoingConnections>
+                    <connection operIndex="2" operName="DataFeed.ParserOutput.ParserOutput" portIndex="0" portKind="input"/>
+                  </outgoingConnections>
+                </port>
+              </inputPorts>
+              <outputPorts>
+                <port index="0">
+                  <incomingConnections>
+                    <connection operIndex="2" operName="DataFeed.ParserOutput.ParserOutput" portIndex="0" portKind="output"/>
+                  </incomingConnections>
+                  <outgoingConnections>
+                    <connection operIndex="4" operName="DataFeed" portIndex="0" portKind="output"/>
+                  </outgoingConnections>
+                </port>
+              </outputPorts>
+              <primitiveOperInstance definitionIndex="0" endLine="94" index="2" name="DataFeed.ParserOutput.ParserOutput" optimized="true" relocatable="true" restartable="true" singleThreadedOnOutputs="true" sourceIndex="0" startLine="83">
+                <inputPorts>
+                  <port encoding="LE" index="0" isMutable="false" name="ParserInput" transport="TCP" tupleTypeIndex="0">
+                    <connections>
+                      <connection operIndex="5" operName="DataFeed.ParserOutput" portIndex="0" portKind="input"/>
+                    </connections>
+                  </port>
+                </inputPorts>
+                <outputPorts>
+                  <port encoding="LE" index="0" isMutable="true" name="ParserOutput" streamName="DataFeed" transport="TCP" tupleTypeIndex="1" viewable="true">
+                    <connections>
+                      <connection operIndex="5" operName="DataFeed.ParserOutput" portIndex="0" portKind="output"/>
+                    </connections>
+                  </port>
+                </outputPorts>
+                <envVars>
+                  <envVar name="STREAMS_JAVA_HOME" value="/usr/lib/jvm/java-1.8.0"/>
+                </envVars>
+                <resources>
+                  <poolLocation poolIndex="0"/>
+                </resources>
+                <runtimeConstants>
+                  <runtimeConstant name="lit$0" submissionTimeValueIndex="0" value="&quot;&quot;"/>
+                  <runtimeConstant name="lit$1" value="1"/>
+                </runtimeConstants>
+                <sharedObject class="DataFeed::ParserOutput::ParserOutput">
+                  <wrapper>none</wrapper>
+                  <uri>bin/DataFeed.ParserOutput.ParserOutput.so</uri>
+                </sharedObject>
+                <partitions>
+                  <coLocation colocId="byChannel(DataFeed, 0)"/>
+                </partitions>
+                <tracing level="error"/>
+              </primitiveOperInstance>
+            </compositeOperInstance>
+            <primitiveOperInstance definitionIndex="1" endLine="67" index="1" name="DataFeed.DataFeed" optimized="true" relocatable="true" restartable="true" singleThreadedOnOutputs="true" sourceIndex="0" startLine="51">
+              <splAnnotation internal="true" tag="logicClause">
+                <value key="hasState" type="boolean">true</value>
+                <value key="hasOnProcess" type="boolean">true</value>
+                <value key="hasOnTuple" type="boolean">false</value>
+                <value key="hasOnPunct" type="boolean">false</value>
+              </splAnnotation>
+              <outputPorts>
+                <port encoding="LE" index="0" isMutable="true" name="DataFeed" streamName="DataFeed.DataFeed" transport="TCP" tupleTypeIndex="0" viewable="true">
+                  <connections>
+                    <connection operIndex="5" operName="DataFeed.ParserOutput" portIndex="0" portKind="input"/>
+                  </connections>
+                </port>
+              </outputPorts>
+              <envVars>
+                <envVar name="STREAMS_JAVA_HOME" value="/usr/lib/jvm/java-1.8.0"/>
+              </envVars>
+              <resources>
+                <poolLocation poolIndex="0"/>
+              </resources>
+              <runtimeConstants>
+                <runtimeConstant name="lit$0" value="0"/>
+                <runtimeConstant name="lit$1" submissionTimeValueIndex="1" value="[]"/>
+                <runtimeConstant name="lit$2" value="&quot;Brian&quot;"/>
+                <runtimeConstant name="lit$3" value="&quot;Williams&quot;"/>
+                <runtimeConstant name="lit$4" value="0"/>
+                <runtimeConstant name="lit$5" value="0.1"/>
+              </runtimeConstants>
+              <sharedObject class="DataFeed::DataFeed">
+                <wrapper>none</wrapper>
+                <uri>bin/DataFeed.DataFeed.so</uri>
+              </sharedObject>
+              <partitions>
+                <coLocation colocId="byChannel(DataFeed, 0)"/>
+              </partitions>
+              <tracing level="error"/>
+            </primitiveOperInstance>
+          </compositeOperInstance>
+          <primitiveOperInstance definitionIndex="1" endLine="40" index="0" name="Sink" optimized="true" relocatable="true" restartable="true" singleThreadedOnOutputs="true" sourceIndex="0" startLine="39">
+            <inputPorts>
+              <port encoding="LE" index="0" isControl="true" isMutable="false" name="In" transport="TCP" tupleTypeIndex="1">
+                <connections>
+                  <connection operIndex="4" operName="DataFeed" portIndex="0" portKind="output"/>
+                </connections>
+              </port>
+            </inputPorts>
+            <envVars>
+              <envVar name="STREAMS_JAVA_HOME" value="/usr/lib/jvm/java-1.8.0"/>
+            </envVars>
+            <resources>
+              <poolLocation poolIndex="0"/>
+            </resources>
+            <runtimeConstants/>
+            <sharedObject class="Sink">
+              <wrapper>none</wrapper>
+              <uri>bin/Sink.so</uri>
+            </sharedObject>
+            <tracing level="error"/>
+          </primitiveOperInstance>
+        </compositeOperInstance>
+      </compositeOperInstances>
+    </composites>
+    <toolkits>
+      <toolkit index="0" name="NestedParallelism" uri="file:///home/brian/git/bmwilli/streams/spl/NestedParallelism" version="1.0.0"/>
+      <toolkit index="1" name="spl" uri="file:///opt/ibm/InfoSphere_Streams/4.3.0.2/toolkits/spl" version="1.4.0"/>
+    </toolkits>
+    <parallelRegions>
+      <parallelRegion index="0" name="DataFeed">
+        <parallelOperator operIndex="4"/>
+        <parallelWidth>
+          <submissionTimeParameterIndexForWidth>2</submissionTimeParameterIndexForWidth>
+        </parallelWidth>
+      </parallelRegion>
+      <parallelRegion index="1" name="DataFeed.ParserOutput">
+        <parallelOperator operIndex="5">
+          <splitter iportIndex="0" kind="RoundRobin"/>
+        </parallelOperator>
+        <parallelWidth>
+          <submissionTimeParameterIndexForWidth>3</submissionTimeParameterIndexForWidth>
+        </parallelWidth>
+      </parallelRegion>
+    </parallelRegions>
+    <submissionTimeValues>
+      <submissionTimeValue compositeName="app::Nested1" index="0" kind="named" name="parserConfigList" required="true"/>
+      <submissionTimeValue compositeName="app::Nested1" index="3" kind="named" name="parserCount" required="true"/>
+      <submissionTimeValue compositeName="app::Nested1" index="2" kind="named" name="connectionCount" required="true"/>
+      <submissionTimeValue compositeName="app::Nested1" index="1" kind="namedList" name="connectionConfigList" required="true"/>
+    </submissionTimeValues>
+  </splApplication>
+
+</applicationSet>

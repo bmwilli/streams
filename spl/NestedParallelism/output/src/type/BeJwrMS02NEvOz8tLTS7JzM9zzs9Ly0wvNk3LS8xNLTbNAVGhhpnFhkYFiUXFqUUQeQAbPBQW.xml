@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<tupleModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/tuple" class="BeJwrMS02NEvOz8tLTS7JzM9zzs9Ly0wvNk3LS8xNLTbNAVGhhpnFhkYFiUXFqUUQeQAbPBQW" equalitySupported="true" facade="false" splType="tuple&lt;rstring connectionConfig,rstring fname,rstring lname,uint64 i,rstring parserConfig>" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <headers/>
+
+  <attributes>
+    <attribute>
+      <name>connectionConfig</name>
+      <cppType>SPL::rstring</cppType>
+      <splType>rstring</splType>
+    </attribute>
+    <attribute>
+      <name>fname</name>
+      <cppType>SPL::rstring</cppType>
+      <splType>rstring</splType>
+    </attribute>
+    <attribute>
+      <name>lname</name>
+      <cppType>SPL::rstring</cppType>
+      <splType>rstring</splType>
+    </attribute>
+    <attribute>
+      <name>i</name>
+      <cppType>SPL::uint64</cppType>
+      <splType>uint64</splType>
+    </attribute>
+    <attribute>
+      <name>parserConfig</name>
+      <cppType>SPL::rstring</cppType>
+      <splType>rstring</splType>
+    </attribute>
+  </attributes>
+
+</tupleModel>

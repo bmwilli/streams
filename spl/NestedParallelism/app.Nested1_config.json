@@ -1,0 +1,135 @@
+{
+  "jobConfigOverlays": [
+    {
+      "jobConfig": {
+        "jobName": "app::Nested1",
+        "jobGroup": "default",
+        "submissionParameters": [
+          {
+            "name": "parserCount",
+            "value": "2"
+          },
+          {
+            "name": "connectionCount",
+            "value": "3"
+          },
+          {
+            "name": "streams::pe.display",
+            "value": "aws01.ec2.internal:55"
+          },
+          {
+            "name": "parserConfigList",
+            "value": "[[\u0027A\u0027,\u0027B\u0027],[\u0027C\u0027,\u0027D\u0027],[\u0027E\u0027,\u0027F\u0027]]"
+          },
+          {
+            "name": "connectionConfigList",
+            "value": "Connection0,Connection1,Connection2"
+          }
+        ]
+      },
+      "deploymentConfig": {
+        "placementScheme": "balancedInstance",
+        "fusionScheme": "legacy"
+      },
+      "operatorConfigs": {
+        "operators": [
+          {
+            "nameSpec": "Sink"
+          },
+          {
+            "nameSpec": "DataFeed[0].DataFeed"
+          },
+          {
+            "nameSpec": "DataFeed[0].ParserOutput[0].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[0].ParserOutput[1].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[1].ParserOutput[2].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[1].ParserOutput[3].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[1].DataFeed"
+          },
+          {
+            "nameSpec": "DataFeed[2].ParserOutput[4].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[2].ParserOutput[5].ParserOutput"
+          },
+          {
+            "nameSpec": "DataFeed[2].DataFeed"
+          }
+        ]
+      }
+    }
+  ],
+  "results": {
+    "placementResults": [
+      {
+        "peId": 29,
+        "names": [
+          "DataFeed[0].ParserOutput[1].ParserOutput",
+          "DataFeed[0].DataFeed",
+          "DataFeed[0].ParserOutput[0].ParserOutput"
+        ],
+        "tags": [],
+        "hostPlacement": "aws01.ec2.internal"
+      },
+      {
+        "peId": 30,
+        "names": [
+          "DataFeed[1].DataFeed",
+          "DataFeed[1].ParserOutput[3].ParserOutput",
+          "DataFeed[1].ParserOutput[2].ParserOutput"
+        ],
+        "tags": [],
+        "hostPlacement": "aws01.ec2.internal"
+      },
+      {
+        "peId": 31,
+        "names": [
+          "DataFeed[2].ParserOutput[4].ParserOutput",
+          "DataFeed[2].ParserOutput[5].ParserOutput",
+          "DataFeed[2].DataFeed"
+        ],
+        "tags": [],
+        "hostPlacement": "aws01.ec2.internal"
+      },
+      {
+        "peId": 28,
+        "names": [
+          "Sink"
+        ],
+        "tags": [],
+        "hostPlacement": "aws01.ec2.internal"
+      }
+    ],
+    "jobResources": [
+      {
+        "resourceId": "aws01.ec2.internal",
+        "numberOfCores": 4,
+        "amountOfMemory": 16004796,
+        "networkBandwidth": 0,
+        "tags": []
+      }
+    ],
+    "parallelRegionsInfo": [
+      {
+        "name": "DataFeed",
+        "width": 3
+      },
+      {
+        "name": "DataFeed.ParserOutput",
+        "width": 2
+      }
+    ],
+    "deploymentConfig": {
+      "placementScheme": "balancedInstance",
+      "fusionScheme": "legacy"
+    }
+  }
+}

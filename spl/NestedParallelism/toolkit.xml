@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.3.0.2" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <toolkit name="NestedParallelism" requiredProductVersion="4.0" version="1.0.0">
+    <description>Toolkit Description</description>
+    <uriTable>
+      <uri index="1" value="app/Nested1.spl"/>
+    </uriTable>
+    <namespace name="app">
+      <compositeOp column="11" line="15" name="Nested1" potentialMain="true" uriIndex="1">
+        <parameter defaultValue="getSubmissionTimeListValue(&quot;connectionConfigList&quot;)" metaType="Expression" name="connectionConfigList" optional="true" type="&lt;list&lt;rstring>>"/>
+        <parameter defaultValue="(int32)getSubmissionTimeValue(&quot;connectionCount&quot;)" metaType="Expression" name="connectionCount" optional="true" type="&lt;int32>"/>
+        <parameter defaultValue="(int32)getSubmissionTimeValue(&quot;parserCount&quot;)" metaType="Expression" name="parserCount" optional="true" type="&lt;int32>"/>
+        <parameter defaultValue="getSubmissionTimeValue(&quot;parserConfigList&quot;)" metaType="Expression" name="parserConfigListLiteral" optional="true" type="&lt;rstring>"/>
+      </compositeOp>
+      <compositeOp column="18" line="43" name="Feeder" potentialMain="false" public="true" uriIndex="1">
+        <parameter metaType="Expression" name="connectionConfig" optional="false" type="&lt;rstring>"/>
+        <parameter metaType="Expression" name="parserCount" optional="false" type="&lt;int32>"/>
+        <parameter metaType="Expression" name="parserConfigListLiteral" optional="false" type="&lt;rstring>"/>
+        <outputPort name="ParserOutput" portIndex="0"/>
+      </compositeOp>
+      <compositeOp column="18" line="79" name="Parser" potentialMain="false" public="true" uriIndex="1">
+        <parameter metaType="Expression" name="parserConfigListLiteral" optional="false" type="&lt;rstring>"/>
+        <inputPort name="ParserInput" portIndex="0"/>
+        <outputPort name="ParserOutput" portIndex="0"/>
+      </compositeOp>
+      <type column="6" line="3" name="mytype" static="true" type="rstring connectionConfig, rstring fname, rstring lname, uint64 i" uriIndex="1"/>
+      <type column="6" line="10" name="mytype2" static="true" type="mytype, tuple&lt;rstring parserConfig>" uriIndex="1"/>
+    </namespace>
+    <sabFiles>
+      <ti:include path="toolkit.xml" root="toolkitDir"/>
+      <ti:include path="impl/java/lib/**" root="toolkitDir"/>
+      <ti:include path="impl/java/bin/**" root="toolkitDir"/>
+      <ti:include path="impl/bin/**" root="toolkitDir"/>
+      <ti:include path="impl/lib/**" root="toolkitDir"/>
+      <ti:include path="impl/nl/*.dat" root="toolkitDir"/>
+      <ti:include path="etc/**" root="toolkitDir"/>
+      <ti:include path="lib/**" root="toolkitDir"/>
+      <ti:include path="nl/**" root="toolkitDir"/>
+      <ti:include path="opt/**" root="toolkitDir"/>
+    </sabFiles>
+  </toolkit>
+
+</toolkitModel>

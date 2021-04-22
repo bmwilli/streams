@@ -1,0 +1,3 @@
+	@$(CXX_LN) $(SPL_CXXFLAGS) -o bin/Sink.so -fPIC -shared $(SOSink) $(SPL_LDFLAGS)\
+	    build/operator/Sink.o \
+	    build/type/BeJwrMS02NEvOz8tLTS7JzM9zzs9Ly0wvNk3LS8xNLTbNAVGhhpnFhkYFiUXFqUUQeQAbPBQW.o 
