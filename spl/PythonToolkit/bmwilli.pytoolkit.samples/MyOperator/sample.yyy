@@ -1,0 +1,28 @@
+use bmwilli.pytoolkit::MySource;
+use bmwilli.pytoolkit::MyOperator;
+
+composite sample {
+  param
+    expression<uint32> $stop: (uint32)getSubmissionTimeValue("stop","10");
+    expression<uint32> $start: (uint32)getSubmissionTimeValue("start","0");
+
+  graph
+    stream<uint32 x> PyData = MySource() {
+      param
+        start: $start;
+        stop: $stop;
+    }
+
+    (stream<PyData> Original;
+     stream<PyData> Modified) = MyOperator(PyData){}
+
+    () as ModifiedSink = Custom(Modified as In) {
+      logic
+        onTuple In: println("Modified: " + (rstring)In);
+    }
+
+    () as OriginalSink = Custom(Original as In) {
+      logic
+        onTuple In: println("Original: " + (rstring)In);
+    }
+}

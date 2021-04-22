@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     # Licensed Materials - Property of IBM
+     # Copyright IBM Corp. 2015,2016
+-->
+<operatorModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.ibm.com/xmlns/prod/streams/spl/operator" xmlns:cmn="http://www.ibm.com/xmlns/prod/streams/spl/common" xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
+  <cppOperatorModel>
+    <context>
+      <description>
+Callable: MySource
+
+# Python
+    @spl.source()
+    class MySource(object):
+      def __init__(self,stop,start=0):
+        # Parameters
+        self.stop = stop
+        self.start = start
+    
+        # Instance variables
+        self.shutdown = False
+    
+        # Logging
+        self.log = logging.getLogger(&quot;com.ibm.streams.log&quot;)
+        self.trace = logging.getLogger(__name__)
+        
+    
+      def __enter__(self):
+        # Do any open stuff and create metrics
+        self.log.info(&quot;*** MySource enter log&quot;)
+        self.trace.info(&quot;*** MySource enter trace&quot;)
+        self.log.info(&quot;*** MySource Log message&quot;)
+        self.trace.info(&quot;*** MySource Trace message&quot;)
+    
+        self.metric_mycount = ec.CustomMetric(self, &quot;mycount&quot;)
+    
+      def __iter__(self):
+        self.x = self.start
+        return self
+    
+      def __next__(self):
+        if self.shutdown:
+          return None
+    
+        otuple = {&quot;x&quot;:self.x}
+    
+        if self.x &gt; self.stop:
+          otuple = None
+        else:
+          self.x +=1
+          self.metric_mycount += 1
+          self.trace.info(&quot;### Just updated self.metric_mycount to: &quot; + str(self.metric_mycount.value))
+    
+        return otuple
+        
+    
+      def next(self):
+        return self.__next__() # for python 2
+    
+      def __exit__(self, exc_type, exc_value, traceback):
+        # Do any close stuff here
+        self.trace.debug(&quot;*** MySource exiting&quot;)
+        self.shutdown = True
+        pass
+
+      </description>
+      <iconUri size="16">../../opt/.splpy/icons/python-powered16.gif</iconUri>
+      <iconUri size="32">../../opt/.splpy/icons/python-powered32.gif</iconUri>
+      <metrics>
+      </metrics>
+      <libraryDependencies>
+        <library>
+          <cmn:description>SPLPY header</cmn:description>
+          <cmn:managedLibrary>
+            <cmn:includePath>../../opt/.splpy/include</cmn:includePath>
+          </cmn:managedLibrary>
+        </library>
+        <library>
+          <cmn:description>Python libraries.</cmn:description>
+          <cmn:managedLibrary>
+            <cmn:command>../../opt/.splpy/common/pyversion3.sh</cmn:command>
+          </cmn:managedLibrary>
+        </library>
+      </libraryDependencies>
+      <providesSingleThreadedContext>Always</providesSingleThreadedContext>
+      <allowCustomLogic>false</allowCustomLogic>
+    </context>
+    <parameters>
+      <allowAny>false</allowAny>
+      
+ <parameter>
+  <name>stop</name>
+  <description></description>
+  <optional>false</optional>
+  <rewriteAllowed>true</rewriteAllowed>
+  <expressionMode>AttributeFree</expressionMode>
+  <type></type>
+  <cardinality>1</cardinality>
+ </parameter>
+ <parameter>
+  <name>start</name>
+  <description></description>
+  <optional>true</optional>
+  <rewriteAllowed>true</rewriteAllowed>
+  <expressionMode>AttributeFree</expressionMode>
+  <type></type>
+  <cardinality>1</cardinality>
+ </parameter>
+    </parameters>
+    <inputPorts/>
+    <outputPorts>
+      <outputPortSet>
+        <expressionMode>Nonexistent</expressionMode>
+        <autoAssignment>true</autoAssignment>
+        <completeAssignment>false</completeAssignment>
+        <rewriteAllowed>true</rewriteAllowed>
+        <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+        <tupleMutationAllowed>true</tupleMutationAllowed>
+        <cardinality>1</cardinality>
+        <optional>false</optional>
+      </outputPortSet>
+    </outputPorts>
+  </cppOperatorModel>
+</operatorModel>

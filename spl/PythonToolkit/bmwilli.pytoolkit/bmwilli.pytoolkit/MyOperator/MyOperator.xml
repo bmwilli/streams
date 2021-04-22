@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     # Licensed Materials - Property of IBM
+     # Copyright IBM Corp. 2017
+-->
+<operatorModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.ibm.com/xmlns/prod/streams/spl/operator" xmlns:cmn="http://www.ibm.com/xmlns/prod/streams/spl/common" xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
+  <cppOperatorModel>
+    <context>
+      <description>
+Primitive operator super class.
+Classes decorated with `@spl.primitive_operator` must extend
+this class if they have one or more output ports. This class
+provides the `submit` method to submit tuples to specified
+otuput port.
+
+.. versionadded:: 1.8
+# Python
+    @spl.primitive(output_ports=['MODIFIED', 'ORIGINAL'])
+    class MyOperator(spl.PrimitiveOperator):
+      def __init__(self, multiplier=2):
+    
+        # Parameters
+        self.multiplier = multiplier
+    
+        # Instance variables
+        self.shutdown = False
+    
+        # Logging
+        self.log = logging.getLogger(&quot;com.ibm.streams.log&quot;)
+        self.trace = logging.getLogger(__name__)
+        
+    
+      def __enter__(self):
+        # Do any open stuff and create metrics
+        self.log.info(&quot;*** MySource enter log&quot;)
+        self.trace.info(&quot;*** MySource enter trace&quot;)
+        self.log.info(&quot;*** MySource Log message&quot;)
+        self.trace.info(&quot;*** MySource Trace message&quot;)
+    
+        self.metric_mycount = ec.CustomMetric(self, &quot;mycount&quot;)
+    
+    
+      # Take in the attribute we care about
+      @spl.input_port(style=&#x27;position&#x27;)
+      def data(self, x, *otherargs_):
+      #def data(self, x):
+        #self.trace.info(&quot;+++ Received data x: &quot; + str(x) + &quot;, otherargs: &quot; + otherargs_)
+        newvalue = x * self.multiplier
+        # sum function concatenates python tuple values
+        self.submit(&#x27;ORIGINAL&#x27;,(x,) + otherargs_)
+        self.submit(&#x27;MODIFIED&#x27;,(x*self.multiplier,) + otherargs_)
+        #self.submit(&#x27;ORIGINAL&#x27;,(x,))
+        #self.submit(&#x27;MODIFIED&#x27;,(x*self.multiplier,))
+    
+      # Using dictionary tuple
+      @spl.input_port(style=&#x27;position&#x27;)
+      def changeMultiplier(self, multiplier):
+        self.trace.info(&quot;### Received change to mulitplier: &quot; + str(multiplier))
+        self.multiplier = multiplier
+    
+    
+    
+      def __exit__(self, exc_type, exc_value, traceback):
+        # Do any close stuff here
+        self.trace.debug(&quot;*** MyOperator exiting&quot;)
+        self.shutdown = True
+        pass
+
+      </description>
+      <iconUri size="16">../../opt/.splpy/icons/python-powered16.gif</iconUri>
+      <iconUri size="32">../../opt/.splpy/icons/python-powered32.gif</iconUri>
+      <metrics>
+      </metrics>
+      <libraryDependencies>
+        <library>
+          <cmn:description>SPLPY header</cmn:description>
+          <cmn:managedLibrary>
+            <cmn:includePath>../../opt/.splpy/include</cmn:includePath>
+          </cmn:managedLibrary>
+        </library>
+        <library>
+          <cmn:description>Python libraries.</cmn:description>
+          <cmn:managedLibrary>
+            <cmn:command>../../opt/.splpy/common/pyversion3.sh</cmn:command>
+          </cmn:managedLibrary>
+        </library>
+      </libraryDependencies>
+      <providesSingleThreadedContext>Always</providesSingleThreadedContext>
+      <allowCustomLogic>false</allowCustomLogic>
+    </context>
+    <parameters>
+      <allowAny>false</allowAny>
+      
+ <parameter>
+  <name>multiplier</name>
+  <description></description>
+  <optional>true</optional>
+  <rewriteAllowed>true</rewriteAllowed>
+  <expressionMode>AttributeFree</expressionMode>
+  <type></type>
+  <cardinality>1</cardinality>
+ </parameter>
+    </parameters>
+    <inputPorts>
+
+<inputPortSet>
+  <description>
+                                    data
+  </description>
+  <tupleMutationAllowed>false</tupleMutationAllowed>
+  <windowingMode>NonWindowed</windowingMode>
+  <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
+  <cardinality>1</cardinality>
+  <optional>false</optional>
+</inputPortSet>
+
+<inputPortSet>
+  <description>
+                                    changeMultiplier
+  </description>
+  <tupleMutationAllowed>false</tupleMutationAllowed>
+  <windowingMode>NonWindowed</windowingMode>
+  <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
+  <cardinality>1</cardinality>
+  <optional>false</optional>
+</inputPortSet>
+
+    </inputPorts>
+    <outputPorts>
+
+<outputPortSet>
+  <description>
+    __SPLPY__OUTPORT_DESCRIPTION__SPLPY__
+  </description>
+  <expressionMode>Nonexistent</expressionMode>
+  <autoAssignment>false</autoAssignment>
+  <completeAssignment>false</completeAssignment>
+  <rewriteAllowed>true</rewriteAllowed>
+  <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+  <tupleMutationAllowed>false</tupleMutationAllowed>
+  <cardinality>1</cardinality>
+  <optional>false</optional>
+</outputPortSet>
+
+<outputPortSet>
+  <description>
+    __SPLPY__OUTPORT_DESCRIPTION__SPLPY__
+  </description>
+  <expressionMode>Nonexistent</expressionMode>
+  <autoAssignment>false</autoAssignment>
+  <completeAssignment>false</completeAssignment>
+  <rewriteAllowed>true</rewriteAllowed>
+  <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+  <tupleMutationAllowed>false</tupleMutationAllowed>
+  <cardinality>1</cardinality>
+  <optional>false</optional>
+</outputPortSet>
+
+    </outputPorts>
+  </cppOperatorModel>
+</operatorModel>

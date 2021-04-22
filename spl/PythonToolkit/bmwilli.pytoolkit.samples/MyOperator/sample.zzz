@@ -1,0 +1,37 @@
+use bmwilli.pytoolkit::MySource;
+use bmwilli.pytoolkit::MyOperator;
+
+composite sample {
+  param
+    expression<uint32> $stop: (uint32)getSubmissionTimeValue("stop","10");
+    expression<uint32> $start: (uint32)getSubmissionTimeValue("start","0");
+
+  graph
+    stream<uint64 x, rstring xstring> PyData = Beacon() {
+      param
+        iterations: 20u;
+        period: 1.0;
+      output PyData: x = IterationCount(), xstring = "Tuple #" + (rstring)IterationCount();
+    }
+
+    stream<uint64 multiplier> Multiplier = Beacon() {
+      logic state: {mutable uint64 m = 2;}
+      param
+        iterations: 2u;
+        period: 10.0;
+      output Multiplier: multiplier = m + IterationCount();
+    }
+
+    (stream<PyData> Original;
+     stream<PyData> Modified) = MyOperator(PyData;Multiplier){}
+
+    () as ModifiedSink = Custom(Modified as In) {
+      logic
+        onTuple In: println("Modified: " + (rstring)In);
+    }
+
+    () as OriginalSink = Custom(Original as In) {
+      logic
+        onTuple In: println("Original: " + (rstring)In);
+    }
+}
