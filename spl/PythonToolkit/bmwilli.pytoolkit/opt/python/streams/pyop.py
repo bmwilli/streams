@@ -28,6 +28,7 @@ class MyOperator(spl.PrimitiveOperator):
     self.trace.info("*** MySource Trace message")
 
     self.metric_mycount = ec.CustomMetric(self, "mycount")
+    self.metric_mchanges = ec.CustomMetric(self, "mchanges")
 
 
   # Take in the attribute we care about
@@ -41,12 +42,14 @@ class MyOperator(spl.PrimitiveOperator):
     self.submit('MODIFIED',(x*self.multiplier,) + otherargs_)
     #self.submit('ORIGINAL',(x,))
     #self.submit('MODIFIED',(x*self.multiplier,))
+    self.metric_mycount+=1
 
   # Using dictionary tuple
   @spl.input_port(style='position')
   def changeMultiplier(self, multiplier):
     self.trace.info("### Received change to mulitplier: " + str(multiplier))
     self.multiplier = multiplier
+    self.metric_mchanges += 1
 
 
 

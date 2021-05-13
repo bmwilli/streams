@@ -1,0 +1,35 @@
+composite Sample {
+  graph
+    stream <rstring filename> DataIn = Custom() {
+      logic
+        onProcess: {
+          submit({filename="brian-test:2021-wk1:MY$ID1"},DataIn);
+          submit({filename="brian-details:2021-wk1:MY$ID2"},DataIn);
+          submit({filename="brian-test::MY$ID3"},DataIn);
+          submit({filename="brian-details::MY$ID4"},DataIn);
+        }
+    }
+
+    stream <rstring filename, rstring indexName, rstring documentId> ParsedData = Custom(DataIn) {
+      logic
+        state: {
+          mutable list<rstring> fileParts;
+          mutable rstring indexName = "";
+          mutable rstring documentId = "";
+        }
+        onTuple DataIn: {
+          tokenize(filename,":",true,false,fileParts);
+          indexName = fileParts[0];
+          if (length(fileParts[1]) > 0) {
+            indexName = indexName + "-" + fileParts[1];
+          }
+          documentId = fileParts[2];
+          submit({filename=filename,indexName=indexName,documentId=documentId}, ParsedData);
+        }
+    }
+
+    () as Sink = Custom(ParsedData as In) {
+      logic
+        onTuple In: println(In);
+    }
+}

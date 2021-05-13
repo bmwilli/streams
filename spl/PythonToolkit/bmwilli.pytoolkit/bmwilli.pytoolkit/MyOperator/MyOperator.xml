@@ -38,6 +38,7 @@ otuput port.
         self.trace.info(&quot;*** MySource Trace message&quot;)
     
         self.metric_mycount = ec.CustomMetric(self, &quot;mycount&quot;)
+        self.metric_mchanges = ec.CustomMetric(self, &quot;mchanges&quot;)
     
     
       # Take in the attribute we care about
@@ -51,12 +52,14 @@ otuput port.
         self.submit(&#x27;MODIFIED&#x27;,(x*self.multiplier,) + otherargs_)
         #self.submit(&#x27;ORIGINAL&#x27;,(x,))
         #self.submit(&#x27;MODIFIED&#x27;,(x*self.multiplier,))
+        self.metric_mycount+=1
     
       # Using dictionary tuple
       @spl.input_port(style=&#x27;position&#x27;)
       def changeMultiplier(self, multiplier):
         self.trace.info(&quot;### Received change to mulitplier: &quot; + str(multiplier))
         self.multiplier = multiplier
+        self.metric_mchanges += 1
     
     
     
