@@ -1,12 +1,22 @@
+rstring basename(rstring filepath) {
+  mutable list<rstring> pathParts = tokenize(filepath,"/",true);
+  if (size(pathParts) > 0) {
+    return pathParts[size(pathParts) - 1];
+  } else {
+    return "";
+  }
+}
+
 composite Sample {
+
   graph
     stream <rstring filename> DataIn = Custom() {
       logic
         onProcess: {
-          submit({filename="brian-test:2021-wk1:MY$ID1"},DataIn);
-          submit({filename="brian-details:2021-wk1:MY$ID2"},DataIn);
+          submit({filename="/etc/brian-test:2021-wk1:MY$ID1"},DataIn);
+          submit({filename="/var/log/brian-details:2021-wk1$My:ID"},DataIn);
           submit({filename="brian-test::MY$ID3"},DataIn);
-          submit({filename="brian-details::MY$ID4"},DataIn);
+          submit({filename="./brian-details::MY$ID4"},DataIn);
         }
     }
 
@@ -18,12 +28,24 @@ composite Sample {
           mutable rstring documentId = "";
         }
         onTuple DataIn: {
-          tokenize(filename,":",true,false,fileParts);
+          tokenize(basename(filename),":",true,false,fileParts);
           indexName = fileParts[0];
           if (length(fileParts[1]) > 0) {
             indexName = indexName + "-" + fileParts[1];
           }
-          documentId = fileParts[2];
+          if (size(fileParts) > 2) {
+            list<rstring> restParts = fileParts[2:];
+            documentId = "";
+            mutable boolean isFirst = true;
+            for (rstring t in restParts) {
+              if (isFirst) {
+                documentId = t;
+                isFirst = false;
+              } else {
+                documentId = documentId + ":" + t;
+              } 
+            }
+          }
           submit({filename=filename,indexName=indexName,documentId=documentId}, ParsedData);
         }
     }
