@@ -1,0 +1,67 @@
+composite TCPSinkTLS {
+  graph
+    stream <uint64 flip, rstring result > FlipStream = Beacon() {
+      param period : 0.01;
+      output FlipStream : flip = IterationCount(),
+        result = ((random() < 0.5)?"Heads":"Tails");
+    }
+
+    stream <FlipStream> FlipStats = Custom(FlipStream) {
+      logic
+        state : {
+          boolean init = InitCustomMetrics();
+          mutable rstring lastFlip = "";
+          mutable int64 sameCount = 0, maxHeads = 0, maxTails = 0;
+        }
+        onTuple FlipStream : {
+          if (result == lastFlip) {
+            sameCount++;
+            if ((result == "Heads") && (sameCount > maxHeads)) {
+              println("Should set maxHeads = sameCount: " + (rstring)sameCount);
+              maxHeads = sameCount;
+              setCustomMetricValue("maxConsecutiveHeads",maxHeads);
+            } else if ((result == "Tails") && (sameCount > maxTails)) {
+              println("Should set maxTails = sameCount: " + (rstring)sameCount);
+              maxTails = sameCount;
+              setCustomMetricValue("maxConsecutiveTails",maxTails);
+            }
+          } else {
+            sameCount = 0l;
+          }
+          lastFlip = result;
+        }
+    }
+
+    () as PlainSink = TCPSink(FlipStream) {
+      param
+        role: server;
+        port: "5678";
+        reconnectionPolicy: InfiniteRetry;
+        detectDisconnectsBeforeSends: true;
+        flush: 1u;
+        format: txt;
+    }
+
+    // Read from this socket on command line: nc --ssl localhost 5679
+    () as TLSSink = TCPSink(FlipStream) {
+      param
+        role: server;
+        port: "5679";
+        reconnectionPolicy: InfiniteRetry;
+        detectDisconnectsBeforeSends: true;
+        flush: 1u;
+        format: txt;
+        sslAuthenticateClient: none;
+        sslCertificateAuthorityFile: "/share/greybox/jmdev1/AllTrustedPartners.ca-bundle";
+        sslCertificateFile: "/share/greybox/jmdev1/jmdev1-both.pem";
+        sslProtocol: "TLSv1.2";
+    }
+    
+
+}
+
+stateful boolean InitCustomMetrics() {
+  createCustomMetric("maxConsecutiveHeads","Max Consecutive Heads", Sys.Counter, 0l);
+  createCustomMetric("maxConsecutiveTails","Max Consecutive Tails", Sys.Counter, 0l);
+  return true;
+} 
