@@ -1,0 +1,47 @@
+composite Main {
+
+  type
+    MyType = tuple <
+      rstring fname,
+      rstring lname
+    >;
+
+  graph
+  stream<MyType> Data = Custom() {
+    logic
+      onProcess: {
+        submit({fname="Charlen",lname="Williams"},Data);
+      }
+  }
+  
+  stream<MyType> Updates = Sub(Data) {
+    param
+      theType: MyType;
+  } 
+
+  () as Test = Custom(Updates) {
+    logic
+      onTuple Updates: {
+        println(Updates);
+      }
+  }
+}
+
+
+
+composite Sub ( 
+  output OutStream;
+  input InStream)
+{
+  param
+    type $theType;
+  graph
+    stream<$theType> OutStream = Custom(InStream) {
+      logic
+        onTuple InStream : {
+          println("Before Change: " + (rstring)InStream);
+          InStream.fname = "Brian";
+          submit(InStream,OutStream);
+        }
+    }
+}

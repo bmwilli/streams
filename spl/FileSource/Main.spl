@@ -1,0 +1,24 @@
+
+composite Main {
+  param
+    expression<rstring> $filename: getSubmissionTimeValue("f");
+
+  graph
+    (stream<rstring filename, blob fileContent> DocumentBlob;
+     stream<rstring filename, int32 err> FSError) = FileSource() {
+      param
+        file: $filename;
+        format: block;
+      output DocumentBlob: filename=FileName();
+    }
+
+    () as DocumentBlobSink = Custom(DocumentBlob) {
+      logic onTuple DocumentBlob: {
+          println("*** Received DocumentBlob for file: " + filename);
+      }
+    }
+
+    () as FSErrorSink = Custom(FSError) {
+      logic onTuple FSError: println("!!! Received FSError with error: " + (rstring)err + " for file: " + filename);
+    }
+}

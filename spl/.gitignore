@@ -1,0 +1,14 @@
+__pycache__/
+toolkit.xml
+.pid.txt
+output/
+jm.core/impl/java/bin/
+jm.core/impl/java/lib/
+*~
+*_cpp.pm
+*_h.pm
+*.bak
+.project
+*.swp
+.settings
+.classpath

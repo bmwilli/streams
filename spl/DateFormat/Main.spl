@@ -1,0 +1,46 @@
+/* Return Sys.tm datatype from a timestamp */
+Sys.tm toSysTM(timestamp ts) {
+            mutable Sys.tm theTime = {};
+            time(ts,theTime);
+            return theTime;
+}
+
+
+composite Main {
+  graph
+    () as Sink = Custom() {
+      logic
+        onProcess: {
+          timestamp ts = getTimestamp();
+          uint32 ns = getNanoseconds(ts);
+          mutable Sys.tm theTime = {};
+          time(ts,theTime);
+          println("ctime: " + ctime(ts));
+          println(strftime(theTime,"%Y%m%d%H%M")+(rstring)ns);
+          println(strftime(theTime,"%Y%m%d%H%M"));
+          println(strftime(toSysTM(getTimestamp()),"%G-week%V"));
+          println("---------------------------");
+          timestamp ts2 = getTimestamp();
+          uint32 ns2 = getNanoseconds(ts2);
+          time(ts2,theTime);
+          println(strftime(theTime,"%Y%m%d%H%M")+(rstring)ns2);
+          println("---- SHARD STUFF ----");
+          println(strftime(toSysTM(timeStringToTimestamp("01-JAN-1970","00:00:00.000",false)),"%G-week%V"));
+          println(strftime(toSysTM(timeStringToTimestamp("31-DEC-2050","24:59:59.999",false)),"%G-week%V"));
+          println("------ BIT STUFF ------");
+          uint64 tooOld=32;
+          uint64 tooFuture=64;
+          if ((36ul & tooOld) == tooOld) {
+            println("Its tooOld");
+          } else {
+            println("Not tooOld");
+          }
+          if ((128ul & tooOld) == tooOld) {
+            println("Its tooOld");
+          } else {
+            println("Not tooOld");
+          }
+
+        }
+    }
+}

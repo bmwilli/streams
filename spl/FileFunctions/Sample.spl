@@ -1,0 +1,30 @@
+use spl.file::*;
+
+public stateful boolean mymkdir(rstring dirpath, uint32 mode) {
+  int32 EEXIST=17;
+  mutable int32 err = 0;
+  mkdir(dirpath,mode,err);
+  return ((err == EEXIST) || (err == 0));
+}
+
+
+stateful void fileTests() {
+  println("File Tests");
+  mutable int32 err = 0;
+  rstring mydir = "/share/datafiles/archiveWork/errors";
+  //mkdir(mydir,509u,err);
+  //println("err: " + (rstring)err + ", strerror: " + strerror(err)); 
+  boolean ret = mymkdir(mydir,509u);
+  println("ret = " + (rstring)ret); 
+}
+
+composite Sample {
+
+  graph
+    stream <rstring filename> FileTests = Custom() {
+      logic
+        onProcess: {
+          fileTests();
+        }
+    }
+}
